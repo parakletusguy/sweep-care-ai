@@ -21,6 +21,8 @@ out/
 *.sqlite3
 postgres-data/
 redis-data/
+supabase/.temp/
+supabase/.branches/
 
 # OS / Editor
 .DS_Store
