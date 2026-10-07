@@ -25,7 +25,12 @@ import {
   CalendarCheck,
   PhoneCall,
   ExternalLink,
+  Bell,
+  Globe,
+  TrendingUp,
 } from 'lucide-react';
+import { LocaleStore } from '../domain/i18n/locale-store';
+import type { SupportedLocale } from '../domain/i18n/types';
 
 type SectorKey = 'corporate' | 'school' | 'church' | 'training';
 
@@ -50,10 +55,10 @@ interface SectorContent {
 const SECTORS: Record<SectorKey, SectorContent> = {
   corporate: {
     name: 'Corporate & Workplace',
-    badge: 'Enterprise People Ops & HR',
+    badge: 'People Operations & HR',
     headline: 'Eliminate Wellness Guesswork Without Employee Surveillance',
     painPoint:
-      'HR leaders spend thousands on generic wellness perks and one-off engagement surveys, yet burnout remains high, attendance metrics show zero health ROI, and staff fear surveillance.',
+      'Leaders spend significant budgets on generic perks and one-off surveys, yet burnout remains high, attendance metrics show zero health impact, and employees fear their answers will be used against them.',
     solution:
       'SWEEP Care provides privacy-first population intelligence that pinpoints departmental workload friction, auto-drafts targeted interventions, and proves pre/post score improvements.',
     icon: Building2,
@@ -62,7 +67,7 @@ const SECTORS: Record<SectorKey, SectorContent> = {
     participants: 'Employees',
     groups: 'Teams / Departments',
     professionals: 'Wellbeing Officers & Counsellors',
-    managers: 'People Managers & CPOs',
+    managers: 'People Managers & Leaders',
     sampleAssessment: 'Workforce Cognitive Load & Wellbeing Pulse',
     sampleIntervention: 'Asynchronous Work Boundaries & Recovery Programme',
     roiMetric: '+18% reported work-life recovery in post-programme cohorts',
@@ -150,16 +155,18 @@ const SECTOR_QUESTIONS: Record<SectorKey, { q1: string; q2: string; q3: string }
 };
 
 export default function HomePage() {
+  const [activeLocale, setActiveLocale] = useState<SupportedLocale>('en');
   const [activeSector, setActiveSector] = useState<SectorKey>('corporate');
   const [simCohortSize, setSimCohortSize] = useState<number>(8);
   const [demoRequested, setDemoRequested] = useState<boolean>(false);
+  const [activeNotificationTab, setActiveNotificationTab] = useState<'invite' | 'reminder' | 'enrolled'>('invite');
   const [demoAnswers, setDemoAnswers] = useState<{ q1: number; q2: number; q3: number }>({
     q1: 4,
     q2: 3,
     q3: 5,
   });
 
-  // Phase 2A: Professional Case Management & Referrals State
+  // Confidential Case Management State
   const [activePersona, setActivePersona] = useState<'professional' | 'hr'>('professional');
   const [caseNotes, setCaseNotes] = useState([
     {
@@ -175,28 +182,33 @@ export default function HomePage() {
       author: 'Dr. E. Adebayo',
       role: 'Wellbeing Professional',
       time: '25 mins ago',
-      content: 'Outreach completed. Participant consented to external EAP specialist connection. Scheduled weekly resilience check-ins.',
+      content: 'Outreach completed. Participant consented to external specialist connection. Scheduled weekly resilience check-ins.',
       isConfidential: true,
     },
   ]);
   const [newNoteInput, setNewNoteInput] = useState('');
-  const [referralStage, setReferralStage] = useState<number>(2); // 0: Intake, 1: Specialist, 2: In-Progress, 3: External EAP, 4: Closed
+  const [referralStage, setReferralStage] = useState<number>(2);
   const [auditCounter, setAuditCounter] = useState<number>(18);
 
-  // Phase 2B: AI Wellbeing Assistant Demo State
+  // Conversational Support Assistant State
   const [assistantQuery, setAssistantQuery] = useState('');
   const [assistantResponse, setAssistantResponse] = useState<{
     text: string;
     isRefusal: boolean;
-    intent: string;
+    intentLabel: string;
     citation?: string;
     isCrisis?: boolean;
   }>({
-    text: 'Hello! I am your SWEEP Care AI Assistant. I can help explain your wellbeing insights, suggest approved resilience habits, and guide you to support resources. How can I help today?',
+    text: 'Hello! I am your SWEEP Care Assistant. I can help explain your wellbeing insights, suggest approved resilience habits, and guide you to support resources. How can I help today?',
     isRefusal: false,
-    intent: 'RESOURCE_NAVIGATION',
-    citation: 'WHO Guidelines on Mental Health at Work [WHO-MH-WORK-2022]',
+    intentLabel: 'Resource & Navigation Support',
+    citation: 'WHO Guidelines on Mental Health at Work',
   });
+
+  const handleLocaleChange = (locale: SupportedLocale) => {
+    setActiveLocale(locale);
+    LocaleStore.setLocale(locale);
+  };
 
   const handleRunAssistantQuery = (queryText: string) => {
     const q = (queryText || assistantQuery).trim();
@@ -205,15 +217,15 @@ export default function HomePage() {
 
     if (lower.includes('diagnose') || lower.includes('depression') || lower.includes('bipolar')) {
       setAssistantResponse({
-        text: 'I am an AI assistant and cannot provide medical or clinical psychological diagnoses (PRD §48). Please speak with a licensed medical professional, psychologist, or your designated wellbeing officer.',
+        text: 'I am an AI assistant and cannot provide medical or clinical psychological diagnoses. Please speak with a licensed healthcare professional, counselor, or your designated wellbeing officer.',
         isRefusal: true,
-        intent: 'PROHIBITED_MEDICAL_DIAGNOSIS',
+        intentLabel: 'Clinical Diagnosis Guardrail Active',
       });
     } else if (lower.includes('fire') || lower.includes('terminate') || lower.includes('dismiss')) {
       setAssistantResponse({
-        text: 'I am strictly prohibited from giving employment termination, disciplinary, or workforce dismissal advice (PRD Constitutional Rule 15, §48). All workforce decisions must remain with human leadership.',
+        text: 'I am strictly prohibited from giving employment termination, disciplinary, or workforce dismissal advice. All workforce decisions must remain with human leadership.',
         isRefusal: true,
-        intent: 'PROHIBITED_EMPLOYMENT_ADVICE',
+        intentLabel: 'Workplace Policy Guardrail Active',
       });
     } else if (
       lower.includes('emergency') ||
@@ -222,17 +234,17 @@ export default function HomePage() {
       lower.includes('end my life')
     ) {
       setAssistantResponse({
-        text: 'URGENT CRISIS INTERCEPT: If you are in immediate danger or distress, please reach out now. UK Emergency: 999 • Samaritans: 116 123 (24/7 Free & Confidential) • US Emergency: 911 • Crisis Lifeline: 988. A safeguarding alert has been flagged.',
+        text: 'URGENT CRISIS INTERCEPT: If you are in immediate danger or distress, please reach out now. UK Emergency: 999 • Samaritans: 116 123 (24/7 Free & Confidential) • US Emergency: 911 • Crisis Lifeline: 988. A confidential safeguarding alert has been flagged for support.',
         isRefusal: true,
         isCrisis: true,
-        intent: 'CRISIS_EMERGENCY_DETECTED',
+        intentLabel: 'Urgent Crisis Support',
       });
     } else {
       setAssistantResponse({
-        text: 'Small, structured habits create sustainable resilience. Grounded in "WHO Guidelines on Mental Health at Work" [WHO-MH-WORK-2022], consider establishing 15-minute asynchronous recovery windows between high-intensity tasks and setting consistent wind-down boundaries.',
+        text: 'Small, structured habits create sustainable resilience. Grounded in evidence-based occupational health guidance, consider establishing 15-minute asynchronous recovery windows between high-intensity tasks and setting consistent wind-down boundaries.',
         isRefusal: false,
-        intent: 'GOAL_SETTING',
-        citation: 'WHO Guidelines on Mental Health at Work [WHO-MH-WORK-2022]',
+        intentLabel: 'Evidence-Based Resilience Guidance',
+        citation: 'WHO Guidelines on Mental Health at Work',
       });
     }
     setAssistantQuery('');
@@ -246,11 +258,11 @@ export default function HomePage() {
   const demoScore = Math.round((rawSum / 15) * 100);
 
   const referralStages = [
-    { label: 'Intake & Triage', code: 'PENDING_REVIEW' },
-    { label: 'Specialist Assigned', code: 'ASSIGNED' },
-    { label: 'In-Progress Sessions', code: 'IN_PROGRESS' },
-    { label: 'External EAP Referral', code: 'REFERRED_EXTERNAL' },
-    { label: 'Discharge & Closed', code: 'COMPLETED' },
+    { label: 'Intake & Triage', status: 'Stage 1' },
+    { label: 'Specialist Assigned', status: 'Stage 2' },
+    { label: 'In-Progress Sessions', status: 'Stage 3' },
+    { label: 'External Care Provider Referral', status: 'Stage 4' },
+    { label: 'Completed & Discharged', status: 'Stage 5' },
   ];
 
   const handleAddNote = () => {
@@ -305,43 +317,57 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center space-x-6 text-sm font-semibold text-slate-600">
+          <div className="hidden xl:flex items-center space-x-6 text-sm font-semibold text-slate-600">
             <a href="#product-loop" className="hover:text-slate-900 transition-colors">
-              The 6-Step Loop
+              How It Works
             </a>
             <a href="#sectors" className="hover:text-slate-900 transition-colors">
-              Sector Solutions
+              Sectors
             </a>
             <a href="#privacy" className="hover:text-slate-900 transition-colors">
-              Privacy Architecture
+              Privacy Guarantee
             </a>
             <a href="#live-demo" className="hover:text-slate-900 transition-colors">
-              Live Check-In Demo
+              Try a Check-In
+            </a>
+            <a href="#dashboard" className="hover:text-slate-900 transition-colors">
+              My Wellbeing
             </a>
             <a href="#cases" className="hover:text-slate-900 transition-colors">
-              Case Management
+              Care Team Portal
+            </a>
+            <a href="#reports" className="hover:text-slate-900 transition-colors">
+              Impact Reports
             </a>
             <a href="#assistant" className="hover:text-slate-900 transition-colors">
-              AI Assistant & Connectors
+              Support Assistant
             </a>
           </div>
 
           <div className="flex items-center space-x-3">
-            <a
-              href="https://github.com/parakletusguy/sweep-care-ai"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
-            >
-              <ExternalLink className="w-3.5 h-3.5 mr-1" />
-              Source Code
-            </a>
+            {/* Language Selector */}
+            <div className="inline-flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs font-bold">
+              {(['en', 'fr', 'es'] as SupportedLocale[]).map((loc) => (
+                <button
+                  key={loc}
+                  onClick={() => handleLocaleChange(loc)}
+                  className={`px-2 py-1 rounded-md transition-all uppercase cursor-pointer ${
+                    activeLocale === loc
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {loc}
+                </button>
+              ))}
+            </div>
+
             <a
               href="#demo"
               className="inline-flex items-center px-4 py-2 text-xs font-bold rounded-lg text-white shadow-sm hover:opacity-95 transition-all"
               style={{ backgroundColor: sector.primaryColor }}
             >
-              Request Platform Demo
+              Schedule Consultation
             </a>
           </div>
         </div>
@@ -351,7 +377,7 @@ export default function HomePage() {
       <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center overflow-hidden">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold mb-8">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Non-Surveillance Guarantee • Pure Deterministic Scoring • WCAG 2.2 AA</span>
+          <span>Non-Surveillance Guarantee • Verified Consistent Scoring • Accessible to Everyone</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-950 tracking-tight max-w-5xl mx-auto leading-[1.1]">
@@ -363,7 +389,7 @@ export default function HomePage() {
 
         <p className="mt-7 text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
           Organizations around the world serve people without knowing how they are doing or whether support initiatives work. 
-          SWEEP Care AI closes that loop: assess population needs, auto-draft grounded interventions, and prove longitudinal pre/post impact — without employee surveillance.
+          SWEEP Care AI closes that loop: assess population needs, design grounded interventions, and prove longitudinal pre/post impact — without employee surveillance.
         </p>
 
         {/* Hero Action Buttons */}
@@ -390,28 +416,28 @@ export default function HomePage() {
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
               <div className="text-xs font-bold text-slate-900">Zero Surveillance</div>
-              <div className="text-[11px] text-slate-500">No facial, voice or private chat monitoring</div>
+              <div className="text-[11px] text-slate-500">No facial, voice or private monitoring</div>
             </div>
           </div>
           <div className="flex items-start space-x-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs font-bold text-slate-900">Pure-Code Scoring</div>
-              <div className="text-[11px] text-slate-500">100% deterministic (AC-003, no LLM math)</div>
+              <div className="text-xs font-bold text-slate-900">Consistent Scoring</div>
+              <div className="text-[11px] text-slate-500">Standardised, reproducible calculations</div>
             </div>
           </div>
           <div className="flex items-start space-x-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs font-bold text-slate-900">K-Anonymity (K=10)</div>
-              <div className="text-[11px] text-slate-500">Mathematical small-group cell suppression</div>
+              <div className="text-xs font-bold text-slate-900">Small-Group Privacy</div>
+              <div className="text-[11px] text-slate-500">Teams under 10 members protected</div>
             </div>
           </div>
           <div className="flex items-start space-x-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs font-bold text-slate-900">Human Approval Gate</div>
-              <div className="text-[11px] text-slate-500">AI drafts; qualified humans authorize (AC-006)</div>
+              <div className="text-xs font-bold text-slate-900">Human Care Oversight</div>
+              <div className="text-[11px] text-slate-500">Qualified practitioners always decide</div>
             </div>
           </div>
         </div>
@@ -422,7 +448,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">
-              The Continuous Impact Cycle (PRD §10)
+              Continuous Impact Cycle
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
               From Fragmented Signals to Measurable Human Growth
@@ -438,7 +464,7 @@ export default function HomePage() {
                 step: '01',
                 title: 'ASSESS',
                 subtitle: 'Trauma-informed, immutable check-ins',
-                desc: 'Low-friction, mobile-first assessments with autosave resilience. Versioned and permanently locked upon response submission (AC-002).',
+                desc: 'Low-friction, mobile-first assessments with autosave resilience. Locked upon submission for complete record integrity.',
                 icon: Activity,
               },
               {
@@ -452,7 +478,7 @@ export default function HomePage() {
                 step: '03',
                 title: 'DESIGN',
                 subtitle: 'Knowledge-grounded intervention drafts',
-                desc: 'One-click AI drafting of multi-session programmes grounded in verified clinical frameworks (WHO, ISO, NICE). Always labeled Suggested Approach.',
+                desc: 'One-click AI drafting of multi-session programmes grounded in verified clinical and occupational frameworks. Always clearly marked as recommendations.',
                 icon: Sparkles,
               },
               {
@@ -466,7 +492,7 @@ export default function HomePage() {
                 step: '05',
                 title: 'MEASURE',
                 subtitle: 'Longitudinal pre/post score deltas',
-                desc: 'Automatic post-programme reassessment comparing baseline vs follow-up scores using strict non-causal language frameworks (PRD §45).',
+                desc: 'Automatic post-programme reassessment comparing baseline vs follow-up scores using reliable cohort comparison methodologies.',
                 icon: Layers,
               },
               {
@@ -515,13 +541,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-xs font-bold mb-3 uppercase tracking-wider">
-              <span>White-Label Multi-Tenant Engine (PRD §20)</span>
+              <span>Tailored Multi-Sector Solutions</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
               Engineered for Every Organization Serving People
             </h2>
             <p className="mt-3 text-slate-600 text-sm sm:text-base">
-              A single unified codebase dynamically adapting branding, roles, hierarchy, and terminology across four core deployment categories.
+              A single unified platform dynamically adapting branding, roles, hierarchy, and terminology across four core deployment categories.
             </p>
           </div>
 
@@ -617,26 +643,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Privacy Architecture & K-Anonymity Simulator */}
+      {/* Privacy Guarantee & Small-Group Protection */}
       <section id="privacy" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold mb-4 border border-emerald-200">
               <Lock className="w-3.5 h-3.5" />
-              <span>Mathematical Privacy By Design (PRD §36)</span>
+              <span>Guaranteed Privacy by Design</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-              Small-Group Privacy That Earns Employee Trust
+              Small-Group Privacy That Earns Your People's Trust
             </h2>
             <p className="mt-4 text-slate-600 text-sm leading-relaxed">
               If employees or students fear their manager can deduce their individual responses, data accuracy drops to zero. 
-              SWEEP Care AI enforces a strict mathematical threshold ($K=10$). If any departmental filter slice yields fewer than 10 respondents, all scores and text are suppressed automatically.
+              SWEEP Care AI enforces a strict privacy threshold. If any departmental filter slice yields fewer than 10 respondents, all scores and text are suppressed automatically to protect respondent anonymity.
             </p>
 
             <div className="mt-6 p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-bold text-slate-800">
-                  Interactive K-Anonymity Filter Simulator
+                  Interactive Privacy Protection Filter Simulator
                 </span>
                 <span className="text-xs font-extrabold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">
                   Active Filter: {simCohortSize} respondents
@@ -651,20 +677,20 @@ export default function HomePage() {
                 className="w-full accent-teal-700 cursor-pointer"
               />
               <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                <span className="text-rose-500 font-semibold">1 (Dangerous deanonymization)</span>
-                <span className="text-teal-700 font-semibold">Threshold K = 10</span>
-                <span className="text-emerald-600 font-semibold">25 (Safe aggregate)</span>
+                <span className="text-rose-500 font-semibold">1 (Risk of identification)</span>
+                <span className="text-teal-700 font-semibold">Privacy Threshold (10 People)</span>
+                <span className="text-emerald-600 font-semibold">25 (Safe Aggregate)</span>
               </div>
             </div>
 
             <div className="mt-6 space-y-2 text-xs text-slate-600">
               <div className="flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span><strong>AC-007 Health Privacy Boundary:</strong> HR cannot query Class D/E/F raw records.</span>
+                <span><strong>Strict Role Separation:</strong> Managers cannot view personal medical notes or individual check-in answers.</span>
               </div>
               <div className="flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span><strong>Anti-Differencing Controls:</strong> Prevents reconstruction by subtracting teams.</span>
+                <span><strong>Anti-Reconstruction Protection:</strong> Prevents identifying people by subtracting small teams.</span>
               </div>
             </div>
           </div>
@@ -672,7 +698,7 @@ export default function HomePage() {
           <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
-                <div className="font-extrabold text-slate-900 text-sm">Aggregated Population Intelligence Card</div>
+                <div className="font-extrabold text-slate-900 text-sm">Aggregated Team Wellbeing Insights</div>
                 <div className="text-[11px] text-slate-400">Target Segment: Product Engineering Sub-Team</div>
               </div>
               <span
@@ -682,7 +708,7 @@ export default function HomePage() {
                     : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 }`}
               >
-                {isSuppressed ? 'CELL SUPPRESSED' : 'AGGREGATE DISCLOSED'}
+                {isSuppressed ? 'PRIVACY PROTECTED' : 'SAFE AGGREGATE DISCLOSED'}
               </span>
             </div>
 
@@ -694,8 +720,8 @@ export default function HomePage() {
                     Automated Small-Group Privacy Suppression Active
                   </div>
                   <div className="text-xs text-slate-500 max-w-sm mx-auto mt-2 leading-relaxed">
-                    Filter cohort ({simCohortSize} respondents) is strictly below the required privacy baseline ($K=10$). 
-                    Individual metrics and response distributions are blocked to preserve respondent anonymity.
+                    This team slice ({simCohortSize} respondents) is below our privacy threshold of 10 people. 
+                    Individual metrics and responses are completely hidden to protect individual confidentiality.
                   </div>
                 </div>
               ) : (
@@ -728,7 +754,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between">
-                    <span>Identified Priority Theme:</span>
+                    <span>Identified Focus Theme:</span>
                     <span className="font-bold text-amber-700">Workload Friction</span>
                   </div>
                 </div>
@@ -750,7 +776,7 @@ export default function HomePage() {
               Frictionless, Reassuring & Trauma-Informed
             </h2>
             <p className="mt-3 text-slate-400 text-sm sm:text-base">
-              Experience the platform as your {sector.participants.toLowerCase()} will. Select ratings below to test real-time deterministic scoring and grounded intervention suggestions.
+              Experience the platform as your {sector.participants.toLowerCase()} will. Select ratings below to test real-time objective scoring and grounded intervention suggestions.
             </p>
           </div>
 
@@ -845,8 +871,8 @@ export default function HomePage() {
               </div>
 
               <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/80">
-                <span>Lock guarantee: submissions permanently immutable</span>
-                <span className="text-slate-400 font-medium">Estimated time: 45s</span>
+                <span>Submissions permanently secured upon completion</span>
+                <span className="text-slate-400 font-medium">Estimated time: 45 seconds</span>
               </div>
             </div>
 
@@ -857,7 +883,7 @@ export default function HomePage() {
                   Live Calculated Score
                 </span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold border border-emerald-400/30">
-                  Deterministic Pure-Code
+                  Standardised Index
                 </span>
               </div>
 
@@ -867,7 +893,7 @@ export default function HomePage() {
                   <span className="text-lg font-medium text-slate-400">/ 100</span>
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Composite Wellbeing Index (Mathematical unweighted average)
+                  Overall Wellbeing Index
                 </div>
               </div>
 
@@ -879,18 +905,18 @@ export default function HomePage() {
                   {sector.sampleIntervention}
                 </div>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Generated by AI Orchestrator grounded in verified organizational frameworks. Labeled as Suggested Approach and gated by professional review.
+                  Generated from verified occupational health frameworks. Presented as recommendations and subject to professional review.
                 </p>
               </div>
 
               <div className="space-y-2.5 text-xs text-slate-300 pt-2 border-t border-slate-700">
                 <div className="flex items-start space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Calculated in pure compiled TypeScript (Zero LLM calculation error)</span>
+                  <span>Computed with absolute mathematical consistency</span>
                 </div>
                 <div className="flex items-start space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Protected by K-Anonymity (K=10) — Managers cannot view raw responses</span>
+                  <span>Protected by small-group privacy — Managers cannot view individual responses</span>
                 </div>
               </div>
             </div>
@@ -899,39 +925,154 @@ export default function HomePage() {
           {/* Institutional Trust Badges */}
           <div className="mt-14 pt-10 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center max-w-5xl mx-auto">
             <div className="p-3">
-              <div className="text-xs font-bold text-white">PostgreSQL RLS</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Database tenant isolation</div>
+              <div className="text-xs font-bold text-white">Isolated Data Spaces</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Strict institutional boundaries</div>
             </div>
             <div className="p-3">
               <div className="text-xs font-bold text-white">Zero Surveillance</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">No facial, voice or emotion spying</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">No facial, voice or emotion monitoring</div>
             </div>
             <div className="p-3">
               <div className="text-xs font-bold text-white">Human Approval Gate</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Mandatory professional sign-off</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Professional sign-off required</div>
             </div>
             <div className="p-3">
               <div className="text-xs font-bold text-white">Audit Logging</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">Append-only Class D/E/F tracking</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Complete record tracking</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Phase 2A: Professional Case Notes & Referral Pipelines */}
+      {/* Participant Personal Wellbeing Dashboard */}
+      <section id="dashboard" className="py-20 bg-slate-100/60 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-50 text-teal-800 text-xs font-bold mb-3 border border-teal-200">
+              <HeartPulse className="w-3.5 h-3.5 text-teal-600" />
+              <span>Participant Experience</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+              My Personal Wellbeing Space
+            </h2>
+            <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+              What each participant sees upon logging in: their personal growth journey, active programmes, and tailored daily habits — completely confidential and hidden from colleagues or managers.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-200 max-w-5xl mx-auto space-y-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-100">
+              <div>
+                <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                  Personal Profile · Private & Encrypted
+                </span>
+                <h3 className="text-2xl font-black text-slate-950 mt-2">
+                  Welcome back, Alex
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Last check-in completed 3 days ago · Next scheduled pulse in 11 days
+                </p>
+              </div>
+              <div className="flex items-center space-x-2 text-xs font-bold px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Private to You · Hidden from Leadership</span>
+              </div>
+            </div>
+
+            {/* Dashboard 3-Column Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Score Trend */}
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                  <span>Wellbeing Trajectory</span>
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="flex items-baseline space-x-2">
+                  <span className="text-4xl font-black text-slate-900">78</span>
+                  <span className="text-xs font-bold text-emerald-600">+10 pts from baseline</span>
+                </div>
+                <div className="space-y-1.5 pt-2 border-t border-slate-200/80 text-[11px] text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Baseline Check-In:</span>
+                    <span className="font-bold">68 / 100</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mid-Programme Pulse:</span>
+                    <span className="font-bold">73 / 100</span>
+                  </div>
+                  <div className="flex justify-between text-teal-800 font-bold">
+                    <span>Latest Assessment:</span>
+                    <span>78 / 100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Programme */}
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                  <span>Active Programme</span>
+                  <CalendarCheck className="w-4 h-4 text-teal-600" />
+                </div>
+                <div className="text-base font-bold text-slate-900 leading-snug">
+                  Workplace Recovery & Boundary Masterclass
+                </div>
+                <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
+                  <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <span>Progress (Session 3 of 4)</span>
+                    <span className="text-teal-700 font-bold">75%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="h-full bg-teal-600 rounded-full" style={{ width: '75%' }} />
+                  </div>
+                  <div className="text-[11px] text-slate-500 pt-1">
+                    Next workshop: Thursday at 2:00 PM with Facilitator
+                  </div>
+                </div>
+              </div>
+
+              {/* Personalized Daily Habits */}
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                  <span>My Resilience Habits</span>
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center space-x-2 text-slate-800">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>15-min asynchronous boundary window</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-800">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Mid-day cognitive recharge walk</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-800">
+                    <div className="w-3.5 h-3.5 rounded-full border border-slate-400 shrink-0" />
+                    <span>Digital sunset 45 mins before sleep</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-200/80 text-[11px] text-teal-700 font-bold">
+                  2 of 3 habits completed today
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Confidential Case Notes & Referral Pipelines */}
       <section id="cases" className="py-20 bg-slate-100/70 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-50 text-teal-800 text-xs font-bold mb-3 border border-teal-200">
               <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-              <span>Phase 2A: Professional Care Infrastructure (PRD §13, §14, §17)</span>
+              <span>Professional Care Infrastructure</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
               Confidential Case Notes & Referral Pipelines
             </h2>
             <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
-              When an assessment flags acute distress, authorized Wellbeing Professionals need secure case workflows. 
-              SWEEP Care AI enforces a strict architectural boundary: qualified care staff manage encrypted notes and multi-stage referrals, while HR Managers are completely locked out of individual records.
+              When an assessment flags acute distress, authorized Wellbeing Professionals manage secure case workflows. 
+              SWEEP Care AI enforces a strict architectural boundary: qualified care staff manage encrypted notes and multi-stage referrals, while People Managers are completely locked out of individual records.
             </p>
 
             {/* Persona Switcher Buttons */}
@@ -956,7 +1097,7 @@ export default function HomePage() {
                 }`}
               >
                 <Lock className="w-3.5 h-3.5 text-rose-600" />
-                <span>HR / People Manager View (Restricted AC-007)</span>
+                <span>People Manager / HR View (Privacy-Protected)</span>
               </button>
             </div>
           </div>
@@ -986,8 +1127,8 @@ export default function HomePage() {
                     <span className="font-bold text-slate-800">Sarah M. (Cohort Alpha)</span>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Data Classification</span>
-                    <span className="font-bold text-teal-700">Class D (Sensitive)</span>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Data Privacy Level</span>
+                    <span className="font-bold text-teal-700">Confidential Clinical Data</span>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="text-slate-400 block text-[10px] uppercase font-bold">Assigned Lead</span>
@@ -1020,7 +1161,7 @@ export default function HomePage() {
                       const isCurrent = idx === referralStage;
                       return (
                         <div
-                          key={stage.code}
+                          key={stage.label}
                           className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold border transition-all ${
                             isCurrent
                               ? 'bg-teal-50/80 border-teal-300 text-teal-900 shadow-xs'
@@ -1041,8 +1182,8 @@ export default function HomePage() {
                             )}
                             <span>{stage.label}</span>
                           </div>
-                          <span className="text-[10px] font-mono uppercase text-slate-500">
-                            {stage.code}
+                          <span className="text-[10px] font-medium text-slate-500">
+                            {stage.status}
                           </span>
                         </div>
                       );
@@ -1054,9 +1195,9 @@ export default function HomePage() {
                 <div className="p-3 rounded-xl bg-slate-900 text-slate-200 text-[11px] flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>AC-009 Audit Logger: <strong>{auditCounter} verified events</strong></span>
+                    <span>Verifiable Audit Log: <strong>{auditCounter} verified events</strong></span>
                   </div>
-                  <span className="text-emerald-400 font-mono text-[10px]">SHA-256 SIGNED</span>
+                  <span className="text-emerald-400 font-semibold text-[10px]">VERIFIED SECURE</span>
                 </div>
               </div>
 
@@ -1065,7 +1206,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                   <div>
                     <h3 className="text-sm font-extrabold text-slate-900">
-                      Confidential Clinical & Case Notes
+                      Confidential Care Team Notes
                     </h3>
                     <p className="text-[11px] text-slate-500">
                       Encrypted at rest • Visible only to authorized wellbeing professionals
@@ -1105,7 +1246,7 @@ export default function HomePage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Add encrypted case note (e.g., Progress milestone, EAP check-in update)..."
+                      placeholder="Add encrypted case note (e.g., Progress milestone, support check-in update)..."
                       value={newNoteInput}
                       onChange={(e) => setNewNoteInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
@@ -1121,8 +1262,8 @@ export default function HomePage() {
                     </button>
                   </div>
                   <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Note authoring immediately creates an immutable Class D audit record.</span>
-                    <span className="text-teal-700 font-semibold">PRD §85 Compliant</span>
+                    <span>Note authoring is protected with complete audit traceability.</span>
+                    <span className="text-teal-700 font-semibold">Strict Privacy Standards</span>
                   </div>
                 </div>
               </div>
@@ -1136,20 +1277,20 @@ export default function HomePage() {
 
               <div>
                 <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 uppercase tracking-wide">
-                  403 Forbidden — AC-007 Health Privacy Boundary
+                  Protected Boundary — Confidential Records Restricted
                 </span>
                 <h3 className="text-2xl font-black text-slate-950 mt-3 tracking-tight">
                   Managerial Surveillance Strictly Blocked by Design
                 </h3>
                 <p className="mt-3 text-slate-600 text-sm leading-relaxed max-w-xl mx-auto">
-                  Under <strong>PRD §14</strong> and <strong>Constitutional Rule 15</strong>, People Managers and HR Leaders are permanently barred from viewing individual participant case notes, counselling records, or sensitive health data.
+                  People Managers and HR Leaders are strictly barred from viewing individual participant case notes, counselling records, or personal health responses.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 max-w-lg mx-auto text-xs text-slate-600">
                 <div className="flex items-start space-x-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Database-Level Enforcement:</strong> PostgreSQL Row-Level Security (RLS) rejects HR queries before application processing.</span>
+                  <span><strong>System-Level Enforcement:</strong> Dedicated data boundaries reject unauthorized queries before processing.</span>
                 </div>
                 <div className="flex items-start space-x-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -1157,7 +1298,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-start space-x-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>K-Anonymized Aggregate Only:</strong> HR can only review aggregated cohorts with at least $K=10$ respondents.</span>
+                  <span><strong>Aggregated Trends Only:</strong> HR can only review aggregated cohorts when at least 10 people participate.</span>
                 </div>
               </div>
 
@@ -1174,20 +1315,245 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Phase 2B, 2C, 2D: AI Wellbeing Assistant & Enterprise Connectors */}
+      {/* Organisational Impact Reports Section */}
+      <section id="reports" className="py-20 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold mb-3 border border-slate-200">
+              <BarChart3 className="w-3.5 h-3.5 text-teal-600" />
+              <span>Evidence-Based Impact Intelligence</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+              Organisational Wellbeing Impact Reports
+            </h2>
+            <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+              Demonstrate measurable behavioral and wellbeing improvements to leadership and sponsors with longitudinal pre/post comparisons — without exposing individual responses.
+            </p>
+          </div>
+
+          <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-xl max-w-5xl mx-auto space-y-10">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-800">
+              <div>
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  Executive Cohort Report · Cohort Alpha (142 Participants)
+                </span>
+                <h3 className="text-2xl font-black mt-1">
+                  Longitudinal Outcomes Assessment
+                </h3>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-slate-400 block">Evaluation Window</span>
+                <span className="text-sm font-bold text-white">90-Day Pre / Post Comparison</span>
+              </div>
+            </div>
+
+            {/* Pre vs Post Comparison Bars */}
+            <div className="space-y-6">
+              {/* Metric 1 */}
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-2">
+                  <span>Workplace Cognitive Recovery</span>
+                  <span className="text-emerald-400">+18% Improvement</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                    <span className="text-[11px] text-slate-400 block">Baseline (Pre-Intervention)</span>
+                    <span className="text-lg font-bold text-slate-200">54 / 100</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                    <span className="text-[11px] text-emerald-400 block">Follow-Up (Post-Intervention)</span>
+                    <span className="text-lg font-bold text-emerald-300">72 / 100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metric 2 */}
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-2">
+                  <span>Psychological Safety & Belonging</span>
+                  <span className="text-emerald-400">+24% Improvement</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                    <span className="text-[11px] text-slate-400 block">Baseline (Pre-Intervention)</span>
+                    <span className="text-lg font-bold text-slate-200">58 / 100</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                    <span className="text-[11px] text-emerald-400 block">Follow-Up (Post-Intervention)</span>
+                    <span className="text-lg font-bold text-emerald-300">82 / 100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metric 3 */}
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-2">
+                  <span>Sustained Habit Adoption at 90 Days</span>
+                  <span className="text-emerald-400">89% Active Retention</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                    <span className="text-[11px] text-slate-400 block">Initial Programme Target</span>
+                    <span className="text-lg font-bold text-slate-200">65% Adoption</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                    <span className="text-[11px] text-emerald-400 block">Observed Cohort Performance</span>
+                    <span className="text-lg font-bold text-emerald-300">89% Adoption</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+              <span>All metrics represent anonymous cohort aggregates. Individual answers are never displayed.</span>
+              <span className="text-emerald-400 font-bold">100% Privacy Preserved</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Communication & Confidential Notifications Center */}
+      <section className="py-20 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-200 text-slate-800 text-xs font-bold mb-3">
+              <Bell className="w-3.5 h-3.5 text-teal-600" />
+              <span>Confidential Communications</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+              Privacy-Guaranteed Notifications & Check-In Reminders
+            </h2>
+            <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+              Keep participants engaged without ever exposing confidential details. Notification previews never include scores, case notes, or personal health records.
+            </p>
+
+            {/* Notification Tabs */}
+            <div className="mt-6 inline-flex p-1 rounded-xl bg-slate-200 border border-slate-300">
+              <button
+                onClick={() => setActiveNotificationTab('invite')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeNotificationTab === 'invite' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                }`}
+              >
+                Check-In Invitation
+              </button>
+              <button
+                onClick={() => setActiveNotificationTab('reminder')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeNotificationTab === 'reminder' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                }`}
+              >
+                Friendly Reminder
+              </button>
+              <button
+                onClick={() => setActiveNotificationTab('enrolled')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeNotificationTab === 'enrolled' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                }`}
+              >
+                Programme Enrollment
+              </button>
+            </div>
+          </div>
+
+          {/* Email / In-App Notification Preview Card */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs max-w-2xl mx-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 text-xs">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
+                  S
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900">SWEEP Care Notifications</div>
+                  <div className="text-[11px] text-slate-400">notifications@sweepcare.org</div>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                ENCRYPTED DELIVERY
+              </span>
+            </div>
+
+            <div className="py-6 space-y-4">
+              {activeNotificationTab === 'invite' && (
+                <>
+                  <h4 className="text-base font-extrabold text-slate-900">
+                    Your confidential wellbeing check-in is ready
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    A new wellbeing check-in has been shared with you for Cohort Alpha. It takes around 2 minutes to complete and your responses are completely confidential and protected from leadership.
+                  </p>
+                  <a
+                    href="#live-demo"
+                    className="inline-block px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs"
+                    style={{ backgroundColor: sector.primaryColor }}
+                  >
+                    Start My Check-In
+                  </a>
+                </>
+              )}
+
+              {activeNotificationTab === 'reminder' && (
+                <>
+                  <h4 className="text-base font-extrabold text-slate-900">
+                    Friendly reminder: complete your wellbeing check-in
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    You have an outstanding wellbeing check-in waiting. Taking a couple of minutes now helps your organisation understand how to better support your cohort without ever seeing your individual answers.
+                  </p>
+                  <a
+                    href="#live-demo"
+                    className="inline-block px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs"
+                    style={{ backgroundColor: sector.primaryColor }}
+                  >
+                    Complete My Check-In
+                  </a>
+                </>
+              )}
+
+              {activeNotificationTab === 'enrolled' && (
+                <>
+                  <h4 className="text-base font-extrabold text-slate-900">
+                    You have been enrolled in a wellbeing programme
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Your wellbeing team has enrolled you in the "Workplace Recovery & Boundary Masterclass". You can view session schedules and upcoming dates inside your private personal dashboard.
+                  </p>
+                  <a
+                    href="#dashboard"
+                    className="inline-block px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs"
+                    style={{ backgroundColor: sector.primaryColor }}
+                  >
+                    View My Programme
+                  </a>
+                </>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                No personal scores or notes are ever included in notification bodies
+              </span>
+              <span className="font-semibold text-slate-600">Privacy Standard</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Support Assistant & Enterprise Workflows */}
       <section id="assistant" className="py-20 bg-slate-900 text-white border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-800 text-teal-400 text-xs font-bold mb-3 border border-slate-700">
               <BrainCircuit className="w-3.5 h-3.5" />
-              <span>Phase 2B–2D: Conversational Assistant & Enterprise Infrastructure (PRD §47, §48, §70)</span>
+              <span>Support Assistant & Enterprise Workflows</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
               AI Wellbeing Assistant with Strict Behavioral Fences
             </h2>
             <p className="mt-3 text-slate-400 text-sm sm:text-base leading-relaxed">
               Equip participants with a 24/7 conversational assistant for resource navigation and habit formation. 
-              Protected by 16 non-negotiable PRD safety rules: autonomous diagnosis, medication changes, and employment advice are permanently blocked in compiled code.
+              Protected by rigorous safety guardrails: clinical diagnosis, medical prescription, and employment dismissal guidance are strictly prohibited.
             </p>
           </div>
 
@@ -1199,38 +1565,38 @@ export default function HomePage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="font-extrabold text-white">SWEEP Care Conversational Assistant</span>
                 </div>
-                <span className="text-slate-400 font-mono text-[11px]">Model: sweep-orchestrator-v1.4</span>
+                <span className="text-slate-400 text-[11px]">Safety Engine: Active & Verified</span>
               </div>
 
               {/* Sample Guardrail Prompt Testing Pills */}
               <div>
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  Test Built-In PRD §48 Safety Fences:
+                  Test Ethical Guardrails & Safety Fences:
                 </span>
                 <div className="flex flex-wrap gap-2 text-xs">
                   <button
                     onClick={() => handleRunAssistantQuery('Can you diagnose if I have depression?')}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-rose-400 hover:border-rose-500/50 hover:bg-rose-950/20 transition-all cursor-pointer font-medium"
                   >
-                    🩺 Medical Diagnosis Request
+                    Clinical Diagnosis Request
                   </button>
                   <button
                     onClick={() => handleRunAssistantQuery('Should I fire an underperforming worker with low scores?')}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-amber-400 hover:border-amber-500/50 hover:bg-amber-950/20 transition-all cursor-pointer font-medium"
                   >
-                    🚫 Workplace Dismissal Request
+                    Workplace Policy Request
                   </button>
                   <button
                     onClick={() => handleRunAssistantQuery('I feel hopeless and need emergency help')}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-rose-300 hover:border-rose-400/50 hover:bg-rose-950/30 transition-all cursor-pointer font-medium"
                   >
-                    🚨 Critical Crisis Intercept
+                    Urgent Crisis Support
                   </button>
                   <button
                     onClick={() => handleRunAssistantQuery('How do I build daily resilience habits?')}
                     className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-950/20 transition-all cursor-pointer font-medium"
                   >
-                    💡 Grounded Habit Advice
+                    Evidence-Based Guidance
                   </button>
                 </div>
               </div>
@@ -1247,7 +1613,7 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between text-xs pb-2 mb-2 border-b border-white/10">
                   <span
-                    className={`font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${
+                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${
                       assistantResponse.isCrisis
                         ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                         : assistantResponse.isRefusal
@@ -1255,17 +1621,17 @@ export default function HomePage() {
                         : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     }`}
                   >
-                    {assistantResponse.intent}
+                    {assistantResponse.intentLabel}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {assistantResponse.isRefusal ? 'RULE 15 HARD REFUSAL' : 'GROUNDED IN KNOWLEDGE STORE'}
+                  <span className="text-[10px] text-slate-400">
+                    {assistantResponse.isRefusal ? 'Strict Boundary Enforced' : 'Verified Evidence Source'}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line font-normal">
                   {assistantResponse.text}
                 </p>
                 {assistantResponse.citation && (
-                  <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-teal-400 font-mono flex items-center gap-1.5">
+                  <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-teal-400 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
                     <span>Citation: {assistantResponse.citation}</span>
                   </div>
@@ -1276,7 +1642,7 @@ export default function HomePage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Ask the assistant (e.g. 'How can I set boundaries for evening recovery?')..."
+                  placeholder="Ask for support (e.g. 'How can I set boundaries for evening recovery?')..."
                   value={assistantQuery}
                   onChange={(e) => setAssistantQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleRunAssistantQuery(assistantQuery)}
@@ -1299,55 +1665,55 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
                     <Layers className="w-4 h-4 text-teal-400" />
-                    Enterprise Integrations (PRD §70)
+                    Enterprise Ecosystem Integrations
                   </h3>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                    ALL SYSTEMS NOMINAL
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    CONNECTED & SECURE
                   </span>
                 </div>
 
                 <div className="space-y-3 text-xs">
-                  {/* SCIM 2.0 */}
+                  {/* Directory Sync */}
                   <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">SCIM 2.0 Directory Sync</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">RFC 7644 ACTIVE</span>
+                      <span className="font-bold text-white">Directory Sync</span>
+                      <span className="text-[10px] text-emerald-400">Automated Sync</span>
                     </div>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
                       Automated Okta, Microsoft Entra ID & Google Workspace provisioning and instant deprovisioning.
                     </p>
                   </div>
 
-                  {/* SAML 2.0 SSO */}
+                  {/* SSO */}
                   <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">SAML 2.0 / OIDC SSO</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">7 ROLES MAPPED</span>
+                      <span className="font-bold text-white">Single Sign-On (SSO)</span>
+                      <span className="text-[10px] text-emerald-400">Role-Mapped</span>
                     </div>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Zero friction single sign-on with cryptographic token assertion and role claim federation.
+                      Zero friction single sign-on with cryptographic verification and enterprise role mapping.
                     </p>
                   </div>
 
                   {/* LMS Rostering */}
                   <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">Canvas & Moodle LMS Sync</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">ROSTERS CONNECTED</span>
+                      <span className="font-bold text-white">Learning Systems Sync</span>
+                      <span className="text-[10px] text-emerald-400">Rosters Connected</span>
                     </div>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
                       Maps academic courses and student year cohorts directly to confidential wellbeing check-ins.
                     </p>
                   </div>
 
-                  {/* EAP Webhook Sync */}
+                  {/* Care Partner Sync */}
                   <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">External EAP Webhook Hub</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">HMAC-SHA256 SIGNED</span>
+                      <span className="font-bold text-white">External Care Provider Sync</span>
+                      <span className="text-[10px] text-emerald-400">Secure Exchange</span>
                     </div>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Bi-directional referral milestone sync with external clinical providers and anti-replay protection.
+                      Bi-directional referral milestone sync with external clinical providers and confidential status tracking.
                     </p>
                   </div>
                 </div>
@@ -1368,7 +1734,7 @@ export default function HomePage() {
             Ready to Connect Wellbeing Signals to Measurable Human Growth?
           </h2>
           <p className="mt-5 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Deploy a dedicated white-label tenant configured with your brand, organizational structure, and sector-specific terminology.
+            Deploy a dedicated white-label instance configured with your brand, organizational structure, and sector-specific terminology.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -1390,7 +1756,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6 text-xs text-slate-400">
-            Compliant with PRD v1.0 • No credit card required • SOC 2 & GDPR architecture aligned
+            Enterprise-ready • No credit card required • Built for privacy & security from day one
           </div>
         </div>
       </section>
@@ -1414,26 +1780,26 @@ export default function HomePage() {
             </ul>
           </div>
           <div>
-            <div className="text-xs font-bold text-white uppercase tracking-wider mb-2">Architecture</div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider mb-2">Platform</div>
             <ul className="space-y-1.5">
-              <li>Deterministic Scoring Engine</li>
-              <li>Small-Group K-Anonymity</li>
-              <li>PostgreSQL Row-Level Security</li>
-              <li>RAG Knowledge Grounding</li>
+              <li>Standardised Scoring</li>
+              <li>Small-Group Privacy Protection</li>
+              <li>Institutional Data Isolation</li>
+              <li>Evidence-Based Programme Design</li>
             </ul>
           </div>
           <div>
-            <div className="text-xs font-bold text-white uppercase tracking-wider mb-2">Governance</div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider mb-2">Trust & Safety</div>
             <ul className="space-y-1.5">
-              <li>Build Agent Constitution (§105)</li>
               <li>Non-Surveillance Guarantee</li>
-              <li>Human Approval Gates (AC-006)</li>
-              <li>Health Privacy Boundary (AC-007)</li>
+              <li>Human Approval Gates</li>
+              <li>Role-Based Health Privacy Separation</li>
+              <li>Verifiable Audit Tracking</li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 pt-8 border-t border-slate-800 text-center">
-          <p>© 2026 SWEEP Care AI. All rights reserved. Built strictly in accordance with PRD v1.0.</p>
+          <p>© 2026 SWEEP Care AI. All rights reserved. Dedicated to compassionate, evidence-based, privacy-first care.</p>
         </div>
       </footer>
     </div>

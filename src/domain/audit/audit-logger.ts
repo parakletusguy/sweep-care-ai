@@ -14,24 +14,29 @@ export class AuditLogger {
    */
   public static log(params: {
     tenantId: string;
-    actorId: string;
+    actorId?: string;
+    userId?: string;
+    userRole?: string;
     action: AuditActionType;
-    classification: DataClassification;
-    resourceType: string;
-    resourceId: string;
+    classification?: DataClassification;
+    resourceType?: string;
+    targetEntity?: string;
+    resourceId?: string;
+    targetEntityId?: string;
     metadata?: Record<string, unknown>;
+    details?: Record<string, unknown>;
     ipAddress?: string;
     userAgent?: string;
   }): AuditEvent {
     const event: AuditEvent = {
       id: crypto.randomUUID(),
       tenantId: params.tenantId,
-      actorId: params.actorId,
+      actorId: params.actorId ?? params.userId ?? 'unknown',
       action: params.action,
-      classification: params.classification,
-      resourceType: params.resourceType,
-      resourceId: params.resourceId,
-      metadata: params.metadata,
+      classification: params.classification ?? DataClassification.CLASS_B_ORGANIZATIONAL,
+      resourceType: params.resourceType ?? params.targetEntity ?? 'system',
+      resourceId: params.resourceId ?? params.targetEntityId ?? 'system',
+      metadata: params.metadata ?? params.details,
       ipAddress: params.ipAddress,
       userAgent: params.userAgent,
       timestamp: new Date().toISOString(),

@@ -253,3 +253,73 @@ export const referrals = pgTable('referrals', {
   completedAt: timestamp('completed_at'),
 });
 
+/**
+ * PRD §72: Outbound and In-App Notifications
+ */
+export const notifications = pgTable('notifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  recipientUserId: uuid('recipient_user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  category: text('category').notNull(),
+  channel: text('channel', { enum: ['EMAIL', 'SMS', 'IN_APP'] }).notNull(),
+  subjectLine: text('subject_line').notNull(),
+  bodyPreview: text('body_preview').notNull(),
+  status: text('status', { enum: ['QUEUED', 'SENT', 'FAILED'] }).default('QUEUED').notNull(),
+  failureReason: text('failure_reason'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  sentAt: timestamp('sent_at'),
+});
+
+/**
+ * Phase 3: Contextual Health Measurements (PRD §50, §51, §55 Class E)
+ */
+export const healthMeasurements = pgTable('health_measurements', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  participantId: uuid('participant_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  dataType: text('data_type', {
+    enum: [
+      'BLOOD_PRESSURE_SYSTOLIC',
+      'BLOOD_PRESSURE_DIASTOLIC',
+      'HEART_RATE_BPM',
+      'HEART_RATE_VARIABILITY_MS',
+      'BLOOD_GLUCOSE_MG_DL',
+      'SLEEP_MINUTES',
+      'PHYSICAL_ACTIVITY_STEPS',
+      'OXYGEN_SATURATION_PERCENT',
+      'WEIGHT_KG',
+    ],
+  }).notNull(),
+  value: text('value').notNull(),
+  unit: text('unit').notNull(),
+  source: text('source', {
+    enum: ['MANUAL_ENTRY', 'DEVICE_BLE', 'APPLE_HEALTH_API', 'GOOGLE_HEALTH_CONNECT_API'],
+  }).notNull(),
+  deviceModel: text('device_model'),
+  verificationStatus: text('verification_status', {
+    enum: ['UNVERIFIED_SELF_REPORT', 'DEVICE_VERIFIED', 'CLINICAL_VALIDATED'],
+  }).default('UNVERIFIED_SELF_REPORT').notNull(),
+  consentScopeId: text('consent_scope_id').notNull(),
+  recordedAt: timestamp('recorded_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Super Admin & Data Residency Configuration (PRD §11, §18, §83)
+ */
+export const tenantConfigurations = pgTable('tenant_configurations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull().unique(),
+  dataResidencyRegion: text('data_residency_region', {
+    enum: ['eu-west', 'us-east', 'gb-lon', 'af-south'],
+  }).default('eu-west').notNull(),
+  licenseTier: text('license_tier', {
+    enum: ['STARTER', 'PROFESSIONAL', 'ENTERPRISE'],
+  }).default('STARTER').notNull(),
+  isHealthDataEnabled: boolean('is_health_data_enabled').default(false).notNull(),
+  isAiAssistantEnabled: boolean('is_ai_assistant_enabled').default(true).notNull(),
+  minCohortSize: integer('min_cohort_size').default(10).notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+
