@@ -126,13 +126,45 @@ const SECTORS: Record<SectorKey, SectorContent> = {
   },
 };
 
+const SECTOR_QUESTIONS: Record<SectorKey, { q1: string; q2: string; q3: string }> = {
+  corporate: {
+    q1: 'My workload volume is manageable during standard working hours.',
+    q2: 'I feel safe voicing challenges or concerns without fear of negative consequences.',
+    q3: 'I am able to recharge and disconnect effectively outside of working hours.',
+  },
+  school: {
+    q1: 'I have access to trusted support when academic or peer pressure becomes heavy.',
+    q2: 'I feel a genuine sense of belonging and community with my peers.',
+    q3: 'My sleep, energy, and routine allow me to stay focused throughout the day.',
+  },
+  church: {
+    q1: 'I feel connected and supported by our community during challenging life seasons.',
+    q2: 'Our small groups provide safe, non-judgmental spaces for mutual encouragement.',
+    q3: 'I know how to access confidential pastoral care whenever needed.',
+  },
+  training: {
+    q1: 'The pacing of this programme allows me to absorb, practice, and apply concepts.',
+    q2: 'I receive timely, actionable feedback from my facilitators and mentors.',
+    q3: 'I am adopting sustainable habits that directly enhance my professional stamina.',
+  },
+};
+
 export default function HomePage() {
   const [activeSector, setActiveSector] = useState<SectorKey>('corporate');
   const [simCohortSize, setSimCohortSize] = useState<number>(8);
   const [demoRequested, setDemoRequested] = useState<boolean>(false);
+  const [demoAnswers, setDemoAnswers] = useState<{ q1: number; q2: number; q3: number }>({
+    q1: 4,
+    q2: 3,
+    q3: 5,
+  });
 
   const sector = SECTORS[activeSector];
+  const questions = SECTOR_QUESTIONS[activeSector];
   const isSuppressed = simCohortSize < 10;
+
+  const rawSum = demoAnswers.q1 + demoAnswers.q2 + demoAnswers.q3;
+  const demoScore = Math.round((rawSum / 15) * 100);
 
   return (
     <div
@@ -155,11 +187,8 @@ export default function HomePage() {
               S
             </div>
             <div>
-              <div className="font-extrabold text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
+              <div className="font-extrabold text-lg tracking-tight text-slate-900">
                 SWEEP Care AI
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                  B2B SaaS
-                </span>
               </div>
               <div className="text-xs text-slate-500 font-medium">
                 Wellbeing Intelligence & Programme Design Platform
@@ -177,8 +206,8 @@ export default function HomePage() {
             <a href="#privacy" className="hover:text-slate-900 transition-colors">
               Privacy Architecture
             </a>
-            <a href="#acceptance" className="hover:text-slate-900 transition-colors">
-              Verified Compliance
+            <a href="#live-demo" className="hover:text-slate-900 transition-colors">
+              Live Check-In Demo
             </a>
           </div>
 
@@ -594,48 +623,182 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Verified Acceptance Criteria Status Grid */}
-      <section id="acceptance" className="py-20 bg-slate-950 text-white">
+      {/* Interactive Live Participant Check-In Experience */}
+      <section id="live-demo" className="py-20 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold mb-3 border border-emerald-500/20">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Audited Engineering Baseline • PRD §103</span>
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-800 text-emerald-400 text-xs font-bold mb-3 border border-slate-700">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Interactive Participant Experience Preview</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Verified Acceptance Criteria & Anti-Hallucination Suite
+              Frictionless, Reassuring & Trauma-Informed
             </h2>
-            <p className="mt-3 text-slate-400 text-sm">
-              Every critical safety, tenancy, and scoring boundary is enforced by automated test suites in continuous integration.
+            <p className="mt-3 text-slate-400 text-sm sm:text-base">
+              Experience the platform as your {sector.participants.toLowerCase()} will. Select ratings below to test real-time deterministic scoring and grounded intervention suggestions.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { code: 'AC-001', title: 'Tenant Boundary Isolation', desc: 'PostgreSQL RLS ensures zero cross-tenant leakage across APIs and queries.' },
-              { code: 'AC-002', title: 'Assessment Immutability', desc: 'Submissions permanently lock historic versions; edits spawn version branches.' },
-              { code: 'AC-003', title: 'Deterministic Scoring', desc: 'Pure compiled TypeScript calculation; 1,000 runs produce bit-identical scores.' },
-              { code: 'AC-004', title: 'AI Provenance Record', desc: 'Logs model version, prompt version, retrieved knowledge IDs, and SHA-256 hash.' },
-              { code: 'AC-005', title: 'Citation Verification', desc: 'Refuses unbacked claims and rejects hallucinated citation IDs automatically.' },
-              { code: 'AC-006', title: 'Human Approval Gate', desc: 'AI drafts cannot activate without verified human professional sign-off.' },
-              { code: 'AC-007', title: 'Health Privacy Boundary', desc: 'HR/People Managers are blocked at the data layer from raw Class D/E/F records.' },
-              { code: 'AC-008', title: 'Modular Consent Gate', desc: 'Submissions blocked without active core consent; revocation triggers audit log.' },
-              { code: 'AC-009', title: 'Append-Only Auditability', desc: 'Every query to Class D/E/F sensitive data writes an immutable audit record.' },
-              { code: 'AC-010', title: 'AI Transparency Disclosures', desc: 'Participant-facing AI outputs display visible AI disclosures and disclaimers.' },
-              { code: '§104', title: 'Anti-Hallucination QA', desc: 'Explicitly refuses prompts to invent studies, diagnose illness, or advise firings.' },
-              { code: '§61', title: 'Global Crisis Support', desc: 'Configurable emergency numbers per jurisdiction; zero hardcoded 911 assumptions.' },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex items-start space-x-3.5 hover:border-slate-700 transition-colors"
-              >
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-black text-emerald-400 tracking-wide">{item.code}: {item.title}</div>
-                  <div className="text-xs text-slate-300 mt-1 leading-relaxed">{item.desc}</div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+            {/* Left: Participant Form */}
+            <div className="lg:col-span-7 bg-slate-950 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800 text-xs">
+                <span className="font-bold text-slate-400 uppercase tracking-wider">
+                  {sector.sampleAssessment}
+                </span>
+                <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Autosaved
+                </span>
+              </div>
+
+              {/* Question 1 */}
+              <div>
+                <p className="text-sm font-semibold text-slate-200 mb-3">
+                  1. {questions.q1}
+                </p>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setDemoAnswers((prev) => ({ ...prev, q1: val }))}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        demoAnswers.q1 === val
+                          ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-xs'
+                          : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                  <span>Strongly Disagree</span>
+                  <span>Strongly Agree</span>
                 </div>
               </div>
-            ))}
+
+              {/* Question 2 */}
+              <div>
+                <p className="text-sm font-semibold text-slate-200 mb-3">
+                  2. {questions.q2}
+                </p>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setDemoAnswers((prev) => ({ ...prev, q2: val }))}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        demoAnswers.q2 === val
+                          ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-xs'
+                          : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                  <span>Strongly Disagree</span>
+                  <span>Strongly Agree</span>
+                </div>
+              </div>
+
+              {/* Question 3 */}
+              <div>
+                <p className="text-sm font-semibold text-slate-200 mb-3">
+                  3. {questions.q3}
+                </p>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setDemoAnswers((prev) => ({ ...prev, q3: val }))}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        demoAnswers.q3 === val
+                          ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-xs'
+                          : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                  <span>Strongly Disagree</span>
+                  <span>Strongly Agree</span>
+                </div>
+              </div>
+
+              <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/80">
+                <span>Lock guarantee: submissions permanently immutable</span>
+                <span className="text-slate-400 font-medium">Estimated time: 45s</span>
+              </div>
+            </div>
+
+            {/* Right: Calculated Intelligence Result */}
+            <div className="lg:col-span-5 bg-slate-800/90 p-6 sm:p-8 rounded-3xl border border-slate-700/80 shadow-xl space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-700">
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Live Calculated Score
+                </span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold border border-emerald-400/30">
+                  Deterministic Pure-Code
+                </span>
+              </div>
+
+              <div>
+                <div className="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                  {demoScore}{' '}
+                  <span className="text-lg font-medium text-slate-400">/ 100</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-1">
+                  Composite Wellbeing Index (Mathematical unweighted average)
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-2">
+                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  Suggested Action Path
+                </div>
+                <div className="text-xs font-bold text-white">
+                  {sector.sampleIntervention}
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Generated by AI Orchestrator grounded in verified organizational frameworks. Labeled as Suggested Approach and gated by professional review.
+                </p>
+              </div>
+
+              <div className="space-y-2.5 text-xs text-slate-300 pt-2 border-t border-slate-700">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>Calculated in pure compiled TypeScript (Zero LLM calculation error)</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>Protected by K-Anonymity (K=10) — Managers cannot view raw responses</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Institutional Trust Badges */}
+          <div className="mt-14 pt-10 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center max-w-5xl mx-auto">
+            <div className="p-3">
+              <div className="text-xs font-bold text-white">PostgreSQL RLS</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Database tenant isolation</div>
+            </div>
+            <div className="p-3">
+              <div className="text-xs font-bold text-white">Zero Surveillance</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">No facial, voice or emotion spying</div>
+            </div>
+            <div className="p-3">
+              <div className="text-xs font-bold text-white">Human Approval Gate</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Mandatory professional sign-off</div>
+            </div>
+            <div className="p-3">
+              <div className="text-xs font-bold text-white">Audit Logging</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Append-only Class D/E/F tracking</div>
+            </div>
           </div>
         </div>
       </section>
