@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment and secrets (PRD Rule 11)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Database / SQLite / Redis local data
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Coverage
+coverage/
