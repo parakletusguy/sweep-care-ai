@@ -159,12 +159,66 @@ export default function HomePage() {
     q3: 5,
   });
 
+  // Phase 2A: Professional Case Management & Referrals State
+  const [activePersona, setActivePersona] = useState<'professional' | 'hr'>('professional');
+  const [caseNotes, setCaseNotes] = useState([
+    {
+      id: 'note-1',
+      author: 'Dr. E. Adebayo',
+      role: 'Wellbeing Professional',
+      time: '2 hours ago',
+      content: 'Completed confidential triage. Participant experiencing acute cognitive fatigue from consecutive shift demands. Recommended workload pause and specialized counseling referral.',
+      isConfidential: true,
+    },
+    {
+      id: 'note-2',
+      author: 'Dr. E. Adebayo',
+      role: 'Wellbeing Professional',
+      time: '25 mins ago',
+      content: 'Outreach completed. Participant consented to external EAP specialist connection. Scheduled weekly resilience check-ins.',
+      isConfidential: true,
+    },
+  ]);
+  const [newNoteInput, setNewNoteInput] = useState('');
+  const [referralStage, setReferralStage] = useState<number>(2); // 0: Intake, 1: Specialist, 2: In-Progress, 3: External EAP, 4: Closed
+  const [auditCounter, setAuditCounter] = useState<number>(18);
+
   const sector = SECTORS[activeSector];
   const questions = SECTOR_QUESTIONS[activeSector];
   const isSuppressed = simCohortSize < 10;
 
   const rawSum = demoAnswers.q1 + demoAnswers.q2 + demoAnswers.q3;
   const demoScore = Math.round((rawSum / 15) * 100);
+
+  const referralStages = [
+    { label: 'Intake & Triage', code: 'PENDING_REVIEW' },
+    { label: 'Specialist Assigned', code: 'ASSIGNED' },
+    { label: 'In-Progress Sessions', code: 'IN_PROGRESS' },
+    { label: 'External EAP Referral', code: 'REFERRED_EXTERNAL' },
+    { label: 'Discharge & Closed', code: 'COMPLETED' },
+  ];
+
+  const handleAddNote = () => {
+    if (!newNoteInput.trim()) return;
+    setCaseNotes((prev) => [
+      ...prev,
+      {
+        id: `note-${Date.now()}`,
+        author: 'Dr. E. Adebayo',
+        role: 'Wellbeing Professional',
+        time: 'Just now',
+        content: newNoteInput.trim(),
+        isConfidential: true,
+      },
+    ]);
+    setNewNoteInput('');
+    setAuditCounter((c) => c + 1);
+  };
+
+  const handleAdvanceReferral = () => {
+    setReferralStage((prev) => (prev < referralStages.length - 1 ? prev + 1 : 0));
+    setAuditCounter((c) => c + 1);
+  };
 
   return (
     <div
@@ -208,6 +262,9 @@ export default function HomePage() {
             </a>
             <a href="#live-demo" className="hover:text-slate-900 transition-colors">
               Live Check-In Demo
+            </a>
+            <a href="#cases" className="hover:text-slate-900 transition-colors">
+              Case Management
             </a>
           </div>
 
@@ -800,6 +857,262 @@ export default function HomePage() {
               <div className="text-[11px] text-slate-400 mt-0.5">Append-only Class D/E/F tracking</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Phase 2A: Professional Case Notes & Referral Pipelines */}
+      <section id="cases" className="py-20 bg-slate-100/70 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-50 text-teal-800 text-xs font-bold mb-3 border border-teal-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+              <span>Phase 2A: Professional Care Infrastructure (PRD §13, §14, §17)</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+              Confidential Case Notes & Referral Pipelines
+            </h2>
+            <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+              When an assessment flags acute distress, authorized Wellbeing Professionals need secure case workflows. 
+              SWEEP Care AI enforces a strict architectural boundary: qualified care staff manage encrypted notes and multi-stage referrals, while HR Managers are completely locked out of individual records.
+            </p>
+
+            {/* Persona Switcher Buttons */}
+            <div className="mt-6 inline-flex p-1.5 rounded-2xl bg-slate-200/80 border border-slate-300">
+              <button
+                onClick={() => setActivePersona('professional')}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-2 ${
+                  activePersona === 'professional'
+                    ? 'bg-white text-teal-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <UserCheck className="w-3.5 h-3.5 text-teal-600" />
+                <span>Wellbeing Professional View (Authorized)</span>
+              </button>
+              <button
+                onClick={() => setActivePersona('hr')}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-2 ${
+                  activePersona === 'hr'
+                    ? 'bg-rose-50 text-rose-800 shadow-xs border border-rose-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-600" />
+                <span>HR / People Manager View (Restricted AC-007)</span>
+              </button>
+            </div>
+          </div>
+
+          {activePersona === 'professional' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Active Case Header & Multi-Stage Referral Pipeline */}
+              <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-200 space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div>
+                    <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                      Case #SC-2026-089
+                    </span>
+                    <h3 className="text-base font-extrabold text-slate-900 mt-1">
+                      Acute Workload Stress & Fatigue
+                    </h3>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    ELEVATED PRIORITY
+                  </span>
+                </div>
+
+                {/* Case Metadata */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Participant</span>
+                    <span className="font-bold text-slate-800">Sarah M. (Cohort Alpha)</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Data Classification</span>
+                    <span className="font-bold text-teal-700">Class D (Sensitive)</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Assigned Lead</span>
+                    <span className="font-bold text-slate-800">Dr. E. Adebayo</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Status</span>
+                    <span className="font-bold text-emerald-700">ACTIVE SUPPORT</span>
+                  </div>
+                </div>
+
+                {/* Structured Referral Pipeline */}
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-teal-600" />
+                      Referral Pipeline Lifecycle
+                    </span>
+                    <button
+                      onClick={handleAdvanceReferral}
+                      className="text-[11px] font-bold text-teal-700 hover:text-teal-900 underline cursor-pointer"
+                    >
+                      Advance Pipeline ➔
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {referralStages.map((stage, idx) => {
+                      const isPassed = idx < referralStage;
+                      const isCurrent = idx === referralStage;
+                      return (
+                        <div
+                          key={stage.code}
+                          className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold border transition-all ${
+                            isCurrent
+                              ? 'bg-teal-50/80 border-teal-300 text-teal-900 shadow-xs'
+                              : isPassed
+                              ? 'bg-emerald-50/40 border-emerald-200 text-emerald-800'
+                              : 'bg-slate-50 border-slate-200 text-slate-400'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            {isPassed ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            ) : isCurrent ? (
+                              <div className="w-4 h-4 rounded-full border-2 border-teal-600 flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse" />
+                              </div>
+                            ) : (
+                              <div className="w-4 h-4 rounded-full border border-slate-300" />
+                            )}
+                            <span>{stage.label}</span>
+                          </div>
+                          <span className="text-[10px] font-mono uppercase text-slate-500">
+                            {stage.code}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Tamper-Evident Audit Indicator */}
+                <div className="p-3 rounded-xl bg-slate-900 text-slate-200 text-[11px] flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>AC-009 Audit Logger: <strong>{auditCounter} verified events</strong></span>
+                  </div>
+                  <span className="text-emerald-400 font-mono text-[10px]">SHA-256 SIGNED</span>
+                </div>
+              </div>
+
+              {/* Right Column: Confidential Case Notes Thread */}
+              <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 shadow-xs border border-slate-200 space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">
+                      Confidential Clinical & Case Notes
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Encrypted at rest • Visible only to authorized wellbeing professionals
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-500" />
+                    Confidential Lock Active
+                  </span>
+                </div>
+
+                {/* Note Feed */}
+                <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
+                  {caseNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-2 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-slate-900">{note.author}</span>
+                          <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[10px] font-bold">
+                            {note.role}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-[11px]">{note.time}</span>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                        {note.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add New Note Input */}
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add encrypted case note (e.g., Progress milestone, EAP check-in update)..."
+                      value={newNoteInput}
+                      onChange={(e) => setNewNoteInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
+                      className="flex-1 px-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                    />
+                    <button
+                      onClick={handleAddNote}
+                      className="px-5 py-2.5 text-xs font-bold rounded-xl text-white shadow-xs hover:opacity-95 transition-all cursor-pointer flex items-center space-x-1.5"
+                      style={{ backgroundColor: sector.primaryColor }}
+                    >
+                      <span>Add Note</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>Note authoring immediately creates an immutable Class D audit record.</span>
+                    <span className="text-teal-700 font-semibold">PRD §85 Compliant</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* HR / Manager Restricted View */
+            <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xs border border-rose-200 text-center max-w-3xl mx-auto space-y-6">
+              <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-xs">
+                <Lock className="w-8 h-8" />
+              </div>
+
+              <div>
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 uppercase tracking-wide">
+                  403 Forbidden — AC-007 Health Privacy Boundary
+                </span>
+                <h3 className="text-2xl font-black text-slate-950 mt-3 tracking-tight">
+                  Managerial Surveillance Strictly Blocked by Design
+                </h3>
+                <p className="mt-3 text-slate-600 text-sm leading-relaxed max-w-xl mx-auto">
+                  Under <strong>PRD §14</strong> and <strong>Constitutional Rule 15</strong>, People Managers and HR Leaders are permanently barred from viewing individual participant case notes, counselling records, or sensitive health data.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 max-w-lg mx-auto text-xs text-slate-600">
+                <div className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Database-Level Enforcement:</strong> PostgreSQL Row-Level Security (RLS) rejects HR queries before application processing.</span>
+                </div>
+                <div className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>No Surveillance Allowed:</strong> Free of facial, keyboard, sentiment, or voice tracking of any employee.</span>
+                </div>
+                <div className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>K-Anonymized Aggregate Only:</strong> HR can only review aggregated cohorts with at least $K=10$ respondents.</span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  onClick={() => setActivePersona('professional')}
+                  className="px-6 py-3 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all cursor-pointer"
+                >
+                  Switch Back to Professional View
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

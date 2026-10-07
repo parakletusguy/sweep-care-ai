@@ -160,3 +160,96 @@ export const programmes = pgTable('programmes', {
   approvedAt: timestamp('approved_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+/**
+ * Phase 2A: Professional Cases (PRD §13, §55, §56, AC-007)
+ */
+export const cases = pgTable('cases', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  participantId: uuid('participant_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  status: text('status', {
+    enum: [
+      'OPEN',
+      'IN_REVIEW',
+      'ACTIVE_SUPPORT',
+      'REFERRED',
+      'ESCALATED',
+      'RESOLVED',
+      'CLOSED',
+    ],
+  }).default('OPEN').notNull(),
+  priority: text('priority', {
+    enum: ['ROUTINE', 'ELEVATED', 'URGENT', 'CRISIS'],
+  }).default('ROUTINE').notNull(),
+  classification: text('classification', {
+    enum: ['CLASS_D_SENSITIVE_WELLBEING', 'CLASS_F_SAFEGUARDING'],
+  }).default('CLASS_D_SENSITIVE_WELLBEING').notNull(),
+  assignedProfessionalId: uuid('assigned_professional_id').references(() => users.id),
+  openedById: uuid('opened_by_id').references(() => users.id).notNull(),
+  safeguardingEventId: uuid('safeguarding_event_id'),
+  assessmentSubmissionId: uuid('assessment_submission_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  closedAt: timestamp('closed_at'),
+});
+
+/**
+ * Phase 2A: Confidential Case Notes (PRD §13, §55, §84, §85, AC-007, AC-009)
+ */
+export const caseNotes = pgTable('case_notes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  caseId: uuid('case_id').references(() => cases.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  authorId: uuid('author_id').references(() => users.id).notNull(),
+  authorRole: text('author_role').notNull(),
+  content: text('content').notNull(),
+  classification: text('classification', {
+    enum: ['CLASS_D_SENSITIVE_WELLBEING', 'CLASS_F_SAFEGUARDING'],
+  }).notNull(),
+  isConfidential: boolean('is_confidential').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Phase 2A: Referral Pipelines (PRD §13, §14, §17, §56)
+ */
+export const referrals = pgTable('referrals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  caseId: uuid('case_id').references(() => cases.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  participantId: uuid('participant_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  referredById: uuid('referred_by_id').references(() => users.id).notNull(),
+  assignedProfessionalId: uuid('assigned_professional_id').references(() => users.id),
+  type: text('type', {
+    enum: [
+      'INTERNAL_PROGRAMME',
+      'INTERNAL_SPECIALIST',
+      'EXTERNAL_EAP',
+      'EXTERNAL_CLINICAL',
+      'COMMUNITY_SUPPORT',
+    ],
+  }).notNull(),
+  status: text('status', {
+    enum: [
+      'PENDING_REVIEW',
+      'ASSIGNED',
+      'IN_PROGRESS',
+      'REFERRED_EXTERNAL',
+      'COMPLETED',
+      'DECLINED',
+      'CANCELLED',
+    ],
+  }).default('PENDING_REVIEW').notNull(),
+  providerName: text('provider_name').notNull(),
+  externalContactInfo: text('external_contact_info'),
+  reason: text('reason').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+});
+

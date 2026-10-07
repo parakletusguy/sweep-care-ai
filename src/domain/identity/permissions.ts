@@ -27,6 +27,11 @@ export enum Permission {
   VIEW_SAFEGUARDING_ALERTS = 'VIEW_SAFEGUARDING_ALERTS',
   MANAGE_SAFEGUARDING_CASES = 'MANAGE_SAFEGUARDING_CASES',
 
+  // Phase 2A: Professional Case Management & Referrals (PRD §13, §14, §17)
+  MANAGE_CASES = 'MANAGE_CASES',
+  VIEW_CONFIDENTIAL_NOTES = 'VIEW_CONFIDENTIAL_NOTES',
+  CREATE_REFERRAL = 'CREATE_REFERRAL',
+
   // Audit & Telemetry
   VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
 }
@@ -64,9 +69,12 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     Permission.APPROVE_PROGRAMME, // AC-006 Human gate
     Permission.FACILITATE_PROGRAMME,
     Permission.AUTHOR_ASSESSMENTS,
+    Permission.MANAGE_CASES, // Phase 2A
+    Permission.VIEW_CONFIDENTIAL_NOTES, // Phase 2A
+    Permission.CREATE_REFERRAL, // Phase 2A
   ],
   [Role.HR_MANAGER]: [
-    // PRD §14: By default, HR must NOT receive unrestricted access to raw private self-assessment answers or health data (AC-007)
+    // PRD §14: By default, HR must NOT receive unrestricted access to raw private self-assessment answers, confidential notes or health data (AC-007)
     Permission.VIEW_AGGREGATED_POPULATION_INTELLIGENCE, // Protected by K-anonymity (TBD-PRIV-001)
     Permission.DESIGN_PROGRAMME_DRAFT,
     Permission.INVITE_USERS,
@@ -85,6 +93,9 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     Permission.VIEW_SAFEGUARDING_ALERTS, // Exclusive Class F access
     Permission.MANAGE_SAFEGUARDING_CASES,
     Permission.VIEW_ASSIGNED_PARTICIPANT_RAW_DATA,
+    Permission.MANAGE_CASES, // Phase 2A
+    Permission.VIEW_CONFIDENTIAL_NOTES, // Phase 2A
+    Permission.CREATE_REFERRAL, // Phase 2A
   ],
 };
 
@@ -138,4 +149,54 @@ export class AccessControl {
     // 5. Default safe deny (PRD Rule 7)
     return false;
   }
+
+  /**
+   * Phase 2A: Asserts whether a user session can access a confidential case or its notes.
+   * Strictly enforces AC-007 (HR lockout) and PRD §13/§17 professional boundaries.
+   */
+  public static canAccessCase(
+    session: UserSession,
+    caseClassification: DataClassification,
+    assignedProfessionalId?: string
+  ): boolean {
+    // 1. HR Manager is strictly FORBIDDEN (PRD §14, AC-007)
+    if (session.role === Role.HR_MANAGER) {
+      return false;
+    }
+
+    // 2. Facilitator and Participant are strictly barred from professional case records
+    if (session.role === Role.TRAINER_FACILITATOR || session.role === Role.PARTICIPANT) {
+      return false;
+    }
+
+    // 3. Safeguarding Officer has access to Class F and Class D cases
+    if (session.role === Role.SAFEGUARDING_OFFICER) {
+      return true;
+    }
+
+    // 4. Wellbeing Professional has access to Class D cases (assigned or tenant pool)
+    if (session.role === Role.WELLBEING_PROFESSIONAL) {
+      // If the case is safeguarding (Class F), only designated safeguarding officers or specifically assigned professionals can access
+      if (caseClassification === DataClassification.CLASS_F_SAFEGUARDING) {
+        return assignedProfessionalId === session.userId;
+      }
+      return true;
+    }
+
+    // 5. Default safe deny
+    return false;
+  }
+
+  public static assertCanAccessCase(
+    session: UserSession,
+    caseClassification: DataClassification,
+    assignedProfessionalId?: string
+  ): void {
+    if (!this.canAccessCase(session, caseClassification, assignedProfessionalId)) {
+      throw new Error(
+        `Forbidden: Role ${session.role} is not authorized to access ${caseClassification} case records (PRD §14, AC-007).`
+      );
+    }
+  }
 }
+
