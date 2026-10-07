@@ -3,7 +3,7 @@
 > **White-label, Multi-tenant Wellbeing Intelligence and Programme Design Platform**  
 > *Connecting assessment, population intelligence, grounded programme design, human action, and measurable outcomes.*
 
-[![Tests](https://img.shields.io/badge/tests-18%20passed-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-48%20passed-brightgreen.svg)](#testing)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
 [![PRD Version](https://img.shields.io/badge/PRD-v1.0%20(Oct%202026)-purple.svg)](./PRD.md)
@@ -176,15 +176,16 @@ npm run dev
 | Criterion | Description | Status | Verification Suite |
 |---|---|---|---|
 | **AC-001** | **Tenant Isolation:** Zero cross-tenant data leakage via ambient context. | ✅ **Verified** | `tests/tenancy.test.ts` |
-| **AC-002** | **Assessment Immutability:** Historical submissions retain original version. | 🔄 *Sprint 1.4* | In progress |
+| **AC-002** | **Assessment Immutability:** Historical submissions retain original version. | ✅ **Verified** | `tests/assessment-immutability.test.ts` |
 | **AC-003** | **Deterministic Scoring:** Identical inputs yield bit-identical score across 1,000 runs. | ✅ **Verified** | `tests/scoring.test.ts` |
-| **AC-004** | **AI Provenance:** Every AI output logs model, prompt version, and knowledge IDs. | 🔄 *Sprint 1.7* | In progress |
-| **AC-005** | **Unsupported Evidence:** Model refuses to fabricate citations without verified backing. | 🔄 *Sprint 1.7* | In progress |
-| **AC-006** | **Human Approval:** AI-drafted programmes cannot publish without human approval. | ✅ **Verified** | `tests/rbac.test.ts` |
+| **AC-004** | **AI Provenance:** Every AI output logs model, prompt version, and knowledge IDs. | ✅ **Verified** | `tests/ai-hallucination.test.ts` |
+| **AC-005** | **Unsupported Evidence:** Model refuses to fabricate citations without verified backing. | ✅ **Verified** | `tests/ai-hallucination.test.ts` |
+| **AC-006** | **Human Approval:** AI-drafted programmes cannot publish without human approval. | ✅ **Verified** | `tests/programme-approval.test.ts`, `tests/rbac.test.ts` |
 | **AC-007** | **Health Privacy Boundary:** HR role blocked from raw participant Class D/E/F data. | ✅ **Verified** | `tests/rbac.test.ts` |
-| **AC-008** | **Consent Gate:** Participant submissions blocked without active consent record. | 🔄 *Sprint 1.3* | In progress |
-| **AC-009** | **Auditability:** Accessing sensitive Class D/E/F data writes immutable audit entry. | ✅ **Verified** | `tests/audit.test.ts` |
-| **AC-010** | **AI Disclosure:** Participant-facing AI views render visible AI disclosure badges. | 🔄 *Sprint 1.7* | In progress |
+| **AC-008** | **Consent Gate:** Participant submissions blocked without active consent record. | ✅ **Verified** | `tests/consent.test.ts` |
+| **AC-009** | **Auditability:** Accessing sensitive Class D/E/F data writes immutable audit entry. | ✅ **Verified** | `tests/audit.test.ts`, `tests/safeguarding.test.ts` |
+| **AC-010** | **AI Disclosure:** Participant-facing AI views render visible AI disclosure badges. | ✅ **Verified** | `tests/ai-hallucination.test.ts` |
+| **§104** | **Hallucination Tests:** Refuses to invent evidence, diagnose, or advise dismissals. | ✅ **Verified** | `tests/ai-hallucination.test.ts` |
 
 ---
 
