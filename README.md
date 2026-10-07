@@ -3,6 +3,7 @@
 > **White-label, Multi-tenant Wellbeing Intelligence and Programme Design Platform**  
 > *Connecting assessment, population intelligence, grounded programme design, human action, and measurable outcomes.*
 
+[![Deployment](https://img.shields.io/badge/Vercel-Live%20Production-black?logo=vercel)](https://sweep-care-ai.vercel.app)
 [![Tests](https://img.shields.io/badge/tests-48%20passed-brightgreen.svg)](#testing)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
