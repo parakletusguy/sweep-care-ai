@@ -237,30 +237,30 @@ flowchart LR
 3. **Enterprise Directory & LMS Connectors (§70):**
    - SCIM / SAML SSO integration for corporate and university tenants.
    - Canvas / Moodle LMS sync for student cohorts.
-4. **Multilingual Localization Engine (§90):**
-   - Locale formatting, RTL support, and verified multilingual assessment instrument mappings.
+4. **Multilingual Localization Engine (§90):** [COMPLETED]
+   - Locale formatting, session language preference, and verified multilingual assessment instrument mappings (EN, FR, ES).
 
 ---
 
-## Phase 3: Optional Physiological / Health Data Layer
+## Phase 3: Optional Physiological / Health Data Layer [COMPLETED]
 
-1. **Contextual Health Measurement Ingestion (§50, §51):**
-   - Support for blood pressure, blood glucose, sleep, heart rate, and activity.
+1. **Contextual Health Measurement Ingestion (§50, §51):** [COMPLETED]
+   - Support for blood pressure, blood glucose, sleep, heart rate, and activity with Bluetooth SIG GATT parsing and Apple/Google Health API bridges.
    - Complete provenance tagging: Device ID, manual vs API source, verification state, consent link.
-2. **Strict Medical Boundary Enforcement (§52, §54):**
+2. **Strict Medical Boundary Enforcement (§52, §54):** [COMPLETED]
    - Measurements treated strictly as non-diagnostic wellbeing context.
-   - Clinical alert thresholds must be pulled from versioned medical protocols; zero LLM generation of medical boundaries.
-3. **Enterprise Data Residency & Physical Isolation (§18, §83):**
-   - Dedicated database instances and sovereign region routing for regulated healthcare or government tenants.
+   - Clinical alert thresholds pulled from versioned medical protocols (ACC/AHA 2017 BP, ADA 2024 Glucose, AHA Resting HR); zero LLM generation of medical boundaries.
+3. **Enterprise Data Residency & Sovereign Region Routing (§18, §83):** [COMPLETED]
+   - Super Administrator Console domain engine with sovereign region routing ('eu-west', 'us-east', 'gb-lon', 'af-south') and licensing tier isolation.
 
 ---
 
-## Phase 4: Governed Outcome Intelligence Network
+## Phase 4: Governed Outcome Intelligence Network [COMPLETED]
 
-1. **Cross-Tenant Benchmarking & Learning (§100):**
-   - Federated, de-identified statistical aggregation across participating tenants.
+1. **Cross-Tenant Benchmarking & Learning (§100):** [COMPLETED]
+   - Federated, de-identified statistical aggregation across participating tenants with K=50 multi-tenant sample protection.
    - Answers: *What interventions work best for specific cohort challenges across sectors?*
-2. **Multi-Party Governance & Ethics Board Approval (§100, §110):**
+2. **Multi-Party Governance & Ethics Board Approval (§100, §110, §114):** [COMPLETED]
    - Strict opt-in contract and privacy framework. Zero automated pooling of private tenant data without explicit agreement.
 
 ---
