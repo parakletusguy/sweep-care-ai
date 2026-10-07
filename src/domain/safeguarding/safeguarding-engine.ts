@@ -26,6 +26,56 @@ export class SafeguardingEngine {
   }
 
   /**
+   * Deterministic safety classification for chat and free-text triage (PRD §48, §60).
+   */
+  public static evaluateSafetyFlags(textInput: string): {
+    isTriggered: boolean;
+    severity: SafetySeverityLevel;
+    matchedKeywords: string[];
+  } {
+    const matchedKeywords: string[] = [];
+    for (const pattern of this.CRITICAL_PATTERNS) {
+      const match = textInput.match(pattern);
+      if (match) {
+        matchedKeywords.push(match[0].toLowerCase());
+      }
+    }
+    return {
+      isTriggered: matchedKeywords.length > 0,
+      severity: matchedKeywords.length > 0 ? SafetySeverityLevel.CRITICAL : SafetySeverityLevel.LOW,
+      matchedKeywords: Array.from(new Set(matchedKeywords)),
+    };
+  }
+
+  /**
+   * Resolves regional crisis resources or falls back to standard regional configurations (PRD §61).
+   */
+  public static routeCrisisResources(tenantId: string, countryCode = 'GB'): CrisisResourceConfig {
+    const found = this.resolveCrisisResources(tenantId, countryCode);
+    if (found) return found;
+
+    if (countryCode.toUpperCase() === 'US') {
+      return {
+        tenantId,
+        countryCode: 'US',
+        emergencyNumber: '911',
+        crisisHelplineName: 'Suicide & Crisis Lifeline',
+        crisisHelplineContact: '988',
+        crisisHours: '24/7 Free & Confidential',
+      };
+    }
+
+    return {
+      tenantId,
+      countryCode: 'GB',
+      emergencyNumber: '999',
+      crisisHelplineName: 'Samaritans',
+      crisisHelplineContact: '116 123',
+      crisisHours: '24/7 Free & Confidential',
+    };
+  }
+
+  /**
    * Evaluates text response deterministically against safety rules (PRD §60).
    */
   public static evaluateInput(params: {

@@ -32,5 +32,6 @@ export interface TenantPolicy {
 
 export interface TenantContext {
   tenantId: string;
-  tenantSlug: string;
+  tenantSlug?: string;
 }
+

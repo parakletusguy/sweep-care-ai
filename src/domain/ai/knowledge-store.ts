@@ -99,6 +99,13 @@ export class KnowledgeStore {
     );
   }
 
+  /**
+   * Returns all active approved knowledge sources.
+   */
+  public static getAllSources(): KnowledgeSource[] {
+    return Array.from(this.sources.values()).filter((s) => s.status === 'APPROVED');
+  }
+
   public static _clearForTesting(): void {
     this.sources.clear();
   }

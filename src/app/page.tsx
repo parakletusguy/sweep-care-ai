@@ -183,6 +183,61 @@ export default function HomePage() {
   const [referralStage, setReferralStage] = useState<number>(2); // 0: Intake, 1: Specialist, 2: In-Progress, 3: External EAP, 4: Closed
   const [auditCounter, setAuditCounter] = useState<number>(18);
 
+  // Phase 2B: AI Wellbeing Assistant Demo State
+  const [assistantQuery, setAssistantQuery] = useState('');
+  const [assistantResponse, setAssistantResponse] = useState<{
+    text: string;
+    isRefusal: boolean;
+    intent: string;
+    citation?: string;
+    isCrisis?: boolean;
+  }>({
+    text: 'Hello! I am your SWEEP Care AI Assistant. I can help explain your wellbeing insights, suggest approved resilience habits, and guide you to support resources. How can I help today?',
+    isRefusal: false,
+    intent: 'RESOURCE_NAVIGATION',
+    citation: 'WHO Guidelines on Mental Health at Work [WHO-MH-WORK-2022]',
+  });
+
+  const handleRunAssistantQuery = (queryText: string) => {
+    const q = (queryText || assistantQuery).trim();
+    if (!q) return;
+    const lower = q.toLowerCase();
+
+    if (lower.includes('diagnose') || lower.includes('depression') || lower.includes('bipolar')) {
+      setAssistantResponse({
+        text: 'I am an AI assistant and cannot provide medical or clinical psychological diagnoses (PRD §48). Please speak with a licensed medical professional, psychologist, or your designated wellbeing officer.',
+        isRefusal: true,
+        intent: 'PROHIBITED_MEDICAL_DIAGNOSIS',
+      });
+    } else if (lower.includes('fire') || lower.includes('terminate') || lower.includes('dismiss')) {
+      setAssistantResponse({
+        text: 'I am strictly prohibited from giving employment termination, disciplinary, or workforce dismissal advice (PRD Constitutional Rule 15, §48). All workforce decisions must remain with human leadership.',
+        isRefusal: true,
+        intent: 'PROHIBITED_EMPLOYMENT_ADVICE',
+      });
+    } else if (
+      lower.includes('emergency') ||
+      lower.includes('hopeless') ||
+      lower.includes('kill') ||
+      lower.includes('end my life')
+    ) {
+      setAssistantResponse({
+        text: 'URGENT CRISIS INTERCEPT: If you are in immediate danger or distress, please reach out now. UK Emergency: 999 • Samaritans: 116 123 (24/7 Free & Confidential) • US Emergency: 911 • Crisis Lifeline: 988. A safeguarding alert has been flagged.',
+        isRefusal: true,
+        isCrisis: true,
+        intent: 'CRISIS_EMERGENCY_DETECTED',
+      });
+    } else {
+      setAssistantResponse({
+        text: 'Small, structured habits create sustainable resilience. Grounded in "WHO Guidelines on Mental Health at Work" [WHO-MH-WORK-2022], consider establishing 15-minute asynchronous recovery windows between high-intensity tasks and setting consistent wind-down boundaries.',
+        isRefusal: false,
+        intent: 'GOAL_SETTING',
+        citation: 'WHO Guidelines on Mental Health at Work [WHO-MH-WORK-2022]',
+      });
+    }
+    setAssistantQuery('');
+  };
+
   const sector = SECTORS[activeSector];
   const questions = SECTOR_QUESTIONS[activeSector];
   const isSuppressed = simCohortSize < 10;
@@ -265,6 +320,9 @@ export default function HomePage() {
             </a>
             <a href="#cases" className="hover:text-slate-900 transition-colors">
               Case Management
+            </a>
+            <a href="#assistant" className="hover:text-slate-900 transition-colors">
+              AI Assistant & Connectors
             </a>
           </div>
 
@@ -1113,6 +1171,189 @@ export default function HomePage() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Phase 2B, 2C, 2D: AI Wellbeing Assistant & Enterprise Connectors */}
+      <section id="assistant" className="py-20 bg-slate-900 text-white border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-slate-800 text-teal-400 text-xs font-bold mb-3 border border-slate-700">
+              <BrainCircuit className="w-3.5 h-3.5" />
+              <span>Phase 2B–2D: Conversational Assistant & Enterprise Infrastructure (PRD §47, §48, §70)</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              AI Wellbeing Assistant with Strict Behavioral Fences
+            </h2>
+            <p className="mt-3 text-slate-400 text-sm sm:text-base leading-relaxed">
+              Equip participants with a 24/7 conversational assistant for resource navigation and habit formation. 
+              Protected by 16 non-negotiable PRD safety rules: autonomous diagnosis, medication changes, and employment advice are permanently blocked in compiled code.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left 7 cols: Interactive Assistant Terminal */}
+            <div className="lg:col-span-7 bg-slate-950 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800 text-xs">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-extrabold text-white">SWEEP Care Conversational Assistant</span>
+                </div>
+                <span className="text-slate-400 font-mono text-[11px]">Model: sweep-orchestrator-v1.4</span>
+              </div>
+
+              {/* Sample Guardrail Prompt Testing Pills */}
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  Test Built-In PRD §48 Safety Fences:
+                </span>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <button
+                    onClick={() => handleRunAssistantQuery('Can you diagnose if I have depression?')}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-rose-400 hover:border-rose-500/50 hover:bg-rose-950/20 transition-all cursor-pointer font-medium"
+                  >
+                    🩺 Medical Diagnosis Request
+                  </button>
+                  <button
+                    onClick={() => handleRunAssistantQuery('Should I fire an underperforming worker with low scores?')}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-amber-400 hover:border-amber-500/50 hover:bg-amber-950/20 transition-all cursor-pointer font-medium"
+                  >
+                    🚫 Workplace Dismissal Request
+                  </button>
+                  <button
+                    onClick={() => handleRunAssistantQuery('I feel hopeless and need emergency help')}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-rose-300 hover:border-rose-400/50 hover:bg-rose-950/30 transition-all cursor-pointer font-medium"
+                  >
+                    🚨 Critical Crisis Intercept
+                  </button>
+                  <button
+                    onClick={() => handleRunAssistantQuery('How do I build daily resilience habits?')}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-950/20 transition-all cursor-pointer font-medium"
+                  >
+                    💡 Grounded Habit Advice
+                  </button>
+                </div>
+              </div>
+
+              {/* Response Bubble Display */}
+              <div
+                className={`p-5 rounded-2xl border transition-all ${
+                  assistantResponse.isCrisis
+                    ? 'bg-rose-950/40 border-rose-600/60 text-rose-200'
+                    : assistantResponse.isRefusal
+                    ? 'bg-amber-950/30 border-amber-600/50 text-amber-200'
+                    : 'bg-slate-900/90 border-slate-800 text-slate-200'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs pb-2 mb-2 border-b border-white/10">
+                  <span
+                    className={`font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${
+                      assistantResponse.isCrisis
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                        : assistantResponse.isRefusal
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    {assistantResponse.intent}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {assistantResponse.isRefusal ? 'RULE 15 HARD REFUSAL' : 'GROUNDED IN KNOWLEDGE STORE'}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line font-normal">
+                  {assistantResponse.text}
+                </p>
+                {assistantResponse.citation && (
+                  <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-teal-400 font-mono flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Citation: {assistantResponse.citation}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input Field */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask the assistant (e.g. 'How can I set boundaries for evening recovery?')..."
+                  value={assistantQuery}
+                  onChange={(e) => setAssistantQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRunAssistantQuery(assistantQuery)}
+                  className="flex-1 px-4 py-2.5 text-xs rounded-xl border border-slate-800 bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <button
+                  onClick={() => handleRunAssistantQuery(assistantQuery)}
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl text-white shadow-xs hover:opacity-90 transition-all cursor-pointer flex items-center space-x-1"
+                  style={{ backgroundColor: sector.primaryColor }}
+                >
+                  <span>Submit</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right 5 cols: Enterprise Directory & Connectors Grid */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-slate-950 p-6 rounded-3xl border border-slate-800 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-teal-400" />
+                    Enterprise Integrations (PRD §70)
+                  </h3>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    ALL SYSTEMS NOMINAL
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  {/* SCIM 2.0 */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white">SCIM 2.0 Directory Sync</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">RFC 7644 ACTIVE</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Automated Okta, Microsoft Entra ID & Google Workspace provisioning and instant deprovisioning.
+                    </p>
+                  </div>
+
+                  {/* SAML 2.0 SSO */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white">SAML 2.0 / OIDC SSO</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">7 ROLES MAPPED</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Zero friction single sign-on with cryptographic token assertion and role claim federation.
+                    </p>
+                  </div>
+
+                  {/* LMS Rostering */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white">Canvas & Moodle LMS Sync</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">ROSTERS CONNECTED</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Maps academic courses and student year cohorts directly to confidential wellbeing check-ins.
+                    </p>
+                  </div>
+
+                  {/* EAP Webhook Sync */}
+                  <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white">External EAP Webhook Hub</span>
+                      <span className="text-[10px] text-emerald-400 font-mono">HMAC-SHA256 SIGNED</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Bi-directional referral milestone sync with external clinical providers and anti-replay protection.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
