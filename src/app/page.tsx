@@ -85,10 +85,10 @@ export default function HomePage() {
           </nav>
 
           <a
-            href="/dashboard"
+            href="/login"
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
           >
-            View platform preview
+            Sign in
           </a>
         </div>
       </header>
@@ -108,10 +108,10 @@ export default function HomePage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
-                href="/dashboard"
+                href="/login"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-teal-700 px-5 text-base font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
               >
-                Explore the platform <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Sign in to SWEEP Care <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </a>
               <a
                 href="#how-it-works"
@@ -201,12 +201,12 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl rounded-3xl border border-teal-100 bg-teal-50 px-6 py-10 text-center sm:px-12">
             <Users className="mx-auto h-8 w-8 text-teal-700" aria-hidden="true" />
             <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950">Care becomes stronger when people can be heard safely.</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-600">Explore the platform preview to see the product areas that will support participants, care teams, and organisation leaders.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-600">Sign in to reach the product areas that support participants, care teams, and organisation leaders.</p>
             <a
-              href="/dashboard"
+              href="/login"
               className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-teal-700 px-5 text-base font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
             >
-              View platform preview <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              Sign in to SWEEP Care <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
         </section>
