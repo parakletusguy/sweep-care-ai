@@ -23,7 +23,21 @@ export class AIOrchestrator {
    * Inspects user prompts for requests to invent studies, diagnose individuals, or make employment decisions.
    */
   public static validatePromptSafety(prompt: string): { isSafe: boolean; refusalReason?: string } {
-    const lower = prompt.toLowerCase();
+    const lower = prompt.normalize('NFKC').toLowerCase();
+
+    // Rule 10: User text is data, never an authority to replace the system or
+    // safety instructions. Reject common override and extraction attempts.
+    if (
+      /ignore (all |any |the )?(previous|prior|above|system|developer) (instruction|prompt|rule)/.test(lower) ||
+      /(reveal|show|print|repeat|expose).{0,40}(system prompt|developer message|hidden instruction|chain of thought)/.test(lower) ||
+      /\b(jailbreak|do anything now|bypass (the )?(guardrail|safety|policy)|act as (the )?system)\b/.test(lower)
+    ) {
+      return {
+        isSafe: false,
+        refusalReason:
+          'PromptInjectionDetected: I cannot follow instructions that attempt to override safeguards or expose protected system instructions.',
+      };
+    }
 
     // 1. Prohibited: Firing / Disciplinary employment decisions (PRD §48, §62, §104)
     if (lower.includes('fire') || lower.includes('terminate') || lower.includes('dismiss')) {
@@ -66,6 +80,25 @@ export class AIOrchestrator {
     return { isSafe: true };
   }
 
+  private static validateGeneratedContent(output: AIInterpretationOutput): string | undefined {
+    const generatedText = [
+      output.summary,
+      ...output.observations,
+      ...output.priorityAreas.flatMap((area) => [area.domainName, area.rationale]),
+      ...output.suggestedApproaches.flatMap((approach) => [approach.title, approach.description]),
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    if (/\b(you|they|this person) (have|has|are) (depressed|bipolar|schizophrenic)|\bdiagnosis (is|:)|\bprescribe\b/.test(generatedText)) {
+      return 'ClinicalBoundaryViolation: AI output must not diagnose, prescribe, or label an individual clinically.';
+    }
+
+    if (/\b(fire|terminate|dismiss|discipline) (the |this )?(employee|staff member|person)\b/.test(generatedText)) {
+      return 'EmploymentBoundaryViolation: AI output must not make employment or disciplinary recommendations.';
+    }
+  }
+
   /**
    * Validates and persists an AI interpretation output, strictly verifying citations (AC-005)
    * and logging full provenance (AC-004).
@@ -102,19 +135,53 @@ export class AIOrchestrator {
 
     const output = schemaResult.data;
 
+    // Rule 10 / PRD §104: defend against unsafe content even if it reached the
+    // structured-output layer through a model or retrieval failure.
+    const generatedContentError = this.validateGeneratedContent(output);
+    if (generatedContentError) {
+      return {
+        success: false,
+        transparencyBadge,
+        errors: [generatedContentError],
+      };
+    }
+
     // 2. Citation Traceability & Verification (PRD §75 Rule 2, Rule 6, AC-005)
     const allCitationIds: string[] = [];
     for (const approach of output.suggestedApproaches) {
       allCitationIds.push(...approach.citationIds);
     }
 
-    const citationCheck = KnowledgeStore.validateCitations(allCitationIds);
+    const citationCheck = KnowledgeStore.validateCitationsForTenant(allCitationIds, params.tenantId);
     if (!citationCheck.isValid) {
       return {
         success: false,
         transparencyBadge,
         errors: [
           `AC-005 CitationValidationError: Fabricated or unapproved citation IDs detected: ${citationCheck.unverifiedIds.join(', ')}`,
+        ],
+      };
+    }
+
+    // Every source named in the evidence section must be a verified citation,
+    // and its human-readable metadata must agree with the approved record.
+    const citationIds = new Set(allCitationIds);
+    const evidenceIds = new Set(output.evidence.map((item) => item.sourceId));
+    const missingEvidence = [...citationIds].filter((id) => !evidenceIds.has(id));
+    const unsupportedEvidence = [...evidenceIds].filter((id) => !citationIds.has(id));
+    const mismatchedEvidence = output.evidence
+      .filter((item) => {
+        const source = citationCheck.verifiedSources.find((verified) => verified.id === item.sourceId);
+        return !source || source.title !== item.sourceTitle || source.publisher !== item.publisher;
+      })
+      .map((item) => item.sourceId);
+
+    if (missingEvidence.length || unsupportedEvidence.length || mismatchedEvidence.length) {
+      return {
+        success: false,
+        transparencyBadge,
+        errors: [
+          `AC-005 EvidenceTraceabilityError: missing=${missingEvidence.join(', ') || 'none'}; unsupported=${unsupportedEvidence.join(', ') || 'none'}; mismatched=${mismatchedEvidence.join(', ') || 'none'}.`,
         ],
       };
     }

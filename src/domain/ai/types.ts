@@ -43,7 +43,7 @@ export const AIInterpretationOutputSchema = z.object({
       title: z.string(),
       description: z.string(),
       wordingType: z.literal('SUGGESTED_APPROACH'),
-      citationIds: z.array(z.string()),
+      citationIds: z.array(z.string().min(1)).min(1),
     })
   ),
   evidence: z.array(
@@ -53,7 +53,7 @@ export const AIInterpretationOutputSchema = z.object({
       publisher: z.string(),
     })
   ),
-  limitations: z.array(z.string()),
+  limitations: z.array(z.string().min(1)).min(1),
   requiresHumanReview: z.literal(true), // PRD §78
 });
 

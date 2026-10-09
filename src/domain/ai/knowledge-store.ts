@@ -91,6 +91,34 @@ export class KnowledgeStore {
   }
 
   /**
+   * Citation records are either global or belong to the requesting tenant. A
+   * tenant-scoped source must never be used to ground another tenant's output.
+   */
+  public static validateCitationsForTenant(citationIds: string[], tenantId: string): {
+    isValid: boolean;
+    unverifiedIds: string[];
+    verifiedSources: KnowledgeSource[];
+  } {
+    const unverifiedIds: string[] = [];
+    const verifiedSources: KnowledgeSource[] = [];
+
+    for (const id of citationIds) {
+      const source = this.getSource(id);
+      if (!source || (source.tenantId && source.tenantId !== tenantId)) {
+        unverifiedIds.push(id);
+      } else {
+        verifiedSources.push(source);
+      }
+    }
+
+    return {
+      isValid: unverifiedIds.length === 0,
+      unverifiedIds,
+      verifiedSources,
+    };
+  }
+
+  /**
    * Queries sources by domain for RAG grounding.
    */
   public static querySourcesByDomain(domain: string): KnowledgeSource[] {

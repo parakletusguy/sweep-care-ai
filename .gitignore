@@ -28,9 +28,12 @@ supabase/.branches/
 .DS_Store
 Thumbs.db
 *.log
+tsconfig.tsbuildinfo
 .vscode/
 .idea/
 
 # Coverage
 coverage/
 .vercel
+.env*
+!.env.example

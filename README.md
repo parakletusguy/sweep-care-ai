@@ -4,7 +4,7 @@
 > *Connecting assessment, population intelligence, grounded programme design, human action, and measurable outcomes.*
 
 [![Deployment](https://img.shields.io/badge/Vercel-Live%20Production-black?logo=vercel)](https://sweep-care-ai.vercel.app)
-[![Tests](https://img.shields.io/badge/tests-48%20passed-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-108%20passed-brightgreen.svg)](#testing)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
 [![PRD Version](https://img.shields.io/badge/PRD-v1.0%20(Oct%202026)-purple.svg)](./PRD.md)
@@ -157,7 +157,12 @@ cd sweep-care-ai
 
 # Install dependencies
 npm install
+
+# Configure public Supabase project values (never add service-role credentials)
+cp .env.example .env.local
 ```
+
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` before connecting the application to Supabase.
 
 ### Running Tests
 Execute the automated test suite verifying tenant isolation, RBAC privacy boundaries, scoring repeatability, and audit logging:
