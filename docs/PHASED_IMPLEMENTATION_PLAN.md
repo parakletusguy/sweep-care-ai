@@ -1,6 +1,6 @@
 # SWEEP Care AI — Comprehensive Phased Implementation Plan
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Baseline Reference:** SWEEP Care AI PRD v1.0 (7 October 2026)  
 **Status:** Approved Engineering Blueprint  
 **Primary Product Loop:** Assess → Understand → Design → Act → Measure → Improve  
@@ -227,6 +227,12 @@ flowchart LR
 ---
 
 ## Phase 2: Professional Workflows & Integrations
+
+### Current delivery status — 16 October 2026
+
+**Phase 2A is delivered:** authenticated, tenant-isolated case management, append-only confidential notes, structured referrals, database-enforced workflow transitions, and metadata-only access/mutation audit events. Individual Class D wellbeing records are available only to active Wellbeing Professionals; Class F safeguarding records are available only to active Safeguarding Officers. The care-team page now reads and writes these persisted workflows rather than sample data.
+
+**Not yet delivered in Phase 2:** the AI wellbeing assistant, trainer-specific workflows, SAML/SCIM/LMS integrations, localization production rollout, external referral delivery, and a reviewed staff-assignment/delegation workflow. The Phase 2A referral record does not contact an external provider automatically.
 
 1. **Professional Case Management & Referrals (EPIC 19, §13):**
    - Confidential case notes and structured referral pipelines for authorized Wellbeing Professionals.
