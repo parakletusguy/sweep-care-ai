@@ -1,6 +1,6 @@
 # SWEEP Care AI — Comprehensive Phased Implementation Plan
 
-**Document Version:** 1.1  
+**Document Version:** 1.1
 **Baseline Reference:** SWEEP Care AI PRD v1.0 (7 October 2026)  
 **Status:** Approved Engineering Blueprint  
 **Primary Product Loop:** Assess → Understand → Design → Act → Measure → Improve  
