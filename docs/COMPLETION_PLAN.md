@@ -40,3 +40,26 @@ Resend credentials and Supabase SMTP; paid-plan availability for leaked-password
 - Supabase site URL is `https://careai.sweepacademy.org`; its exact `/auth/callback` URL is on the allow-list alongside the existing Vercel address.
 - Owner confirmed **none yet** for enterprise identity and LMS providers: connection screens remain inactive. No provider adapter is described as connected or tested.
 - Resource navigation is retrieval-only; generative synthesis, goal tracking, full staff-screen translations and approved multilingual instrument content are not complete. No approved resource content or model credential is fabricated.
+
+## Release verification — 19 October 2026
+
+- Production deployment for commit `846747c7a3996615b2b5e5f26635896ab61f3fb5` is **Ready**. Vercel confirms `careai.sweepacademy.org` and the existing Vercel hostname both alias that deployment.
+- The live custom-domain landing page shows the compact “Listen. Understand. Care together.” design, and its sign-in form loads successfully.
+- Supabase magic-link and sign-up confirmation templates now use the deployed `/auth/confirm` token-hash endpoint. This avoids requiring an invitation recipient to possess the administrator's browser-specific PKCE verifier.
+- Exactly one approved sign-in email was requested from the production form. Resend reports **Delivered** for “Your sign-in link”. Delivery is verified; recipient link-opening and the resulting authenticated browser journey still require confirmation. No sign-in token is recorded here.
+- Signed-out production-build checks returned redirects to `/login` for dashboard/admin/assistant/trainer pages and `401` for valid assistant/check-in API requests.
+- The CI workflow runs application tests, type checking and the production build. The live database isolation test remains a separately run transactional check; full automated multi-user browser end-to-end coverage is not implemented.
+
+## Implementation handoff
+
+**IMPLEMENTED:** Persisted adult participant onboarding/profile/consent, verified-email invitations, administrator role management, custom numeric assessment publishing and autosave/submission/results, trainer review/attendance workflows, reviewed-resource navigation, compact landing page, limited participant localization, SMTP and custom-domain release.
+
+**TESTED:** 123 application checks, TypeScript, production build, transactional multi-role/two-tenant database tests, signed-out route/API checks, live landing/sign-in rendering, and actual Resend delivery. These checks do not certify clinical suitability or legal compliance.
+
+**NOT IMPLEMENTED:** Live SAML/SCIM/LMS provider adapters (no provider selected), generative assistant synthesis, personal-goal tracking, complete staff translations and approved multilingual assessment content, guardian/minor onboarding, anonymous/targeted campaign submission, and full browser-based multi-user end-to-end automation.
+
+**UNVERIFIED ASSUMPTIONS:** None of the missing provider credentials, clinical content, model configuration or guardian policies is assumed available. Recipient sign-in-link opening is awaiting user confirmation. Organization-reviewed resources must be supplied before source-based answers can be useful.
+
+**MIGRATIONS:** The three additive migrations listed above were applied to the confirmed SWEEP Care project. The database verification creates temporary records inside a transaction and rolls them back; no destructive rollback was performed.
+
+**KNOWN LIMITATIONS:** Leaked-password protection remains unavailable on the current Free project; enabling it requires an approved paid-plan change. An email provider's Delivered event means the receiving mail server accepted the message, not that the recipient opened it or that it avoided the spam folder. Enterprise setup stays inactive until real provider configuration and live tests are available. This is a verified working release, not a declaration that the full PRD is 100% complete.
