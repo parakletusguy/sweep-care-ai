@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   authors: [{ name: 'SWEEP Care AI' }],
   creator: 'SWEEP Care AI',
   publisher: 'SWEEP Care AI',
-  metadataBase: new URL('https://sweep-care-ai.vercel.app'),
+  metadataBase: new URL('https://careai.sweepacademy.org'),
   openGraph: {
     title: 'SWEEP Care AI — Wellbeing Intelligence & Programme Design Platform',
     description:
       'The B2B intelligence infrastructure connecting wellbeing assessments, grounded programme design, human facilitation, and longitudinal outcome measurement.',
-    url: 'https://sweep-care-ai.vercel.app',
+    url: 'https://careai.sweepacademy.org',
     siteName: 'SWEEP Care AI',
     locale: 'en_US',
     type: 'website',

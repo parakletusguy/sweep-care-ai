@@ -17,8 +17,8 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
     }
 
     setStatus('sent');
-    setMessage('Your secure sign-in link has been sent. You can safely close this page while you check your email.');
+    setMessage('Your sign-in request was accepted. Check your inbox and spam folder for the one-time link. Your organization invitation determines workspace access.');
   }
 
   return (

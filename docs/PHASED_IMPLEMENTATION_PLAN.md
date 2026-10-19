@@ -228,11 +228,13 @@ flowchart LR
 
 ## Phase 2: Professional Workflows & Integrations
 
-### Current delivery status — 16 October 2026
+### Current delivery status — 19 October 2026
 
 **Phase 2A is delivered:** authenticated, tenant-isolated case management, append-only confidential notes, structured referrals, database-enforced workflow transitions, and metadata-only access/mutation audit events. Individual Class D wellbeing records are available only to active Wellbeing Professionals; Class F safeguarding records are available only to active Safeguarding Officers. The care-team page now reads and writes these persisted workflows rather than sample data.
 
-**Not yet delivered in Phase 2:** the AI wellbeing assistant, trainer-specific workflows, SAML/SCIM/LMS integrations, localization production rollout, external referral delivery, and a reviewed staff-assignment/delegation workflow. The Phase 2A referral record does not contact an external provider automatically.
+**Connected workflow release:** participant invitations and role management, consent and drafts, custom numeric assessment publishing/submission/results, reviewed-resource assistant, trainer session approval/enrollment/attendance, and English/French/Spanish participant labels and preferences. See [the completion plan](COMPLETION_PLAN.md) for verification and remaining dependencies.
+
+**Inactive or not yet delivered:** generative assistant synthesis and personal-goal tracking, live SAML/SCIM/LMS provider adapters (the owner confirmed no providers yet), full staff-interface translation and translated assessment instruments, external referral dispatch, and case-assignment delegation. Resource navigation uses approved excerpts rather than a language model. The Phase 2A referral record does not contact external providers automatically.
 
 1. **Professional Case Management & Referrals (EPIC 19, §13):**
    - Confidential case notes and structured referral pipelines for authorized Wellbeing Professionals.
@@ -243,8 +245,8 @@ flowchart LR
 3. **Enterprise Directory & LMS Connectors (§70):**
    - SCIM / SAML SSO integration for corporate and university tenants.
    - Canvas / Moodle LMS sync for student cohorts.
-4. **Multilingual Localization Engine (§90):** [COMPLETED]
-   - Locale formatting, session language preference, and verified multilingual assessment instrument mappings (EN, FR, ES).
+4. **Multilingual Localization Engine (§90):** [PARTIAL]
+   - Persisted language preference and participant dashboard/check-in labels (EN, FR, ES). Staff screens and approved instrument translations remain English or source-language content.
 
 ---
 
