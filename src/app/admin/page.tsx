@@ -1,8 +1,10 @@
+import { serverLocale } from "@/lib/server-locale";
 import Link from "next/link";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { workspaceContext, tenantName } from "@/lib/workspace";
 import { inviteMember, changeMember } from "../workspace-actions";
 import { AssessmentBuilder } from "./assessment-builder";
+import { roleLabel, workflowLabel } from "@/lib/ui-copy";
 
 const roles = [
   "PARTICIPANT",
@@ -17,6 +19,7 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<{ tenant?: string; notice?: string }>;
 }) {
+  const { locale, t } = await serverLocale();
   const params = await searchParams;
   const { supabase, memberships, membership } = await workspaceContext(
     params.tenant,
@@ -26,10 +29,11 @@ export default async function AdminPage({
     !["ORG_ADMIN", "WELLBEING_PROFESSIONAL"].includes(membership.role)
   )
     return (
-      <WorkspaceShell title="Organization workspace">
+      <WorkspaceShell title={t("Organization workspace")}>
         <p className="panel">
-          This workspace requires an organization administrator or wellbeing
-          professional role.
+          {t(
+            "This workspace requires an organization administrator or wellbeing professional role.",
+          )}
         </p>
       </WorkspaceShell>
     );
@@ -77,20 +81,24 @@ export default async function AdminPage({
           className="rounded-lg border bg-white px-3 py-2 text-sm"
           href={`/admin/resources?tenant=${tenant}`}
         >
-          Approved resources
+          {t("Approved resources")}
         </Link>
         <Link
           className="rounded-lg border bg-white px-3 py-2 text-sm"
           href={`/admin/connections?tenant=${tenant}`}
         >
-          Enterprise connections
+          {t("Enterprise connections")}
         </Link>
       </nav>
       {params.notice ? (
         <p role="status" className="panel mb-5">
           {params.notice === "invitation-email-accepted"
-            ? "Invitation saved. The email provider accepted the sign-in request; delivery is not yet confirmed."
-            : "Invitation saved, but the sign-in email could not be sent. Share the sign-in page with the invitee and retry when email service is available."}
+            ? t(
+                "Invitation saved. The email provider accepted the sign-in request; delivery is not yet confirmed.",
+              )
+            : t(
+                "Invitation saved, but the sign-in email could not be sent. Share the sign-in page with the invitee and retry when email service is available.",
+              )}
         </p>
       ) : null}
       <div className="grid items-start gap-6 lg:grid-cols-2">
@@ -98,32 +106,35 @@ export default async function AdminPage({
           {membership.role === "ORG_ADMIN" ? (
             <>
               <form action={inviteMember} className="panel space-y-4">
-                <h2 className="text-xl font-semibold">Invite a member</h2>
+                <h2 className="text-xl font-semibold">
+                  {t("Invite a member")}
+                </h2>
                 <p className="muted">
-                  The invitation is bound to their verified email. Staff roles
-                  grant access to the named workflow; choose carefully.
+                  {t(
+                    "The invitation is bound to their verified email. Staff roles grant access to the named workflow; choose carefully.",
+                  )}
                 </p>
                 <input type="hidden" name="tenantId" value={tenant} />
                 <label className="block text-sm">
-                  Email
+                  {t("Email")}
                   <input className="field" type="email" name="email" required />
                 </label>
                 <label className="block text-sm">
-                  Role
+                  {t("Role")}
                   <select className="field" name="role">
                     {roles.map((r) => (
                       <option key={r} value={r}>
-                        {r.replaceAll("_", " ")}
+                        {roleLabel(r, locale)}
                       </option>
                     ))}
                   </select>
                 </label>
                 <button className="button">
-                  Save invitation and request email
+                  {t("Save invitation and request email")}
                 </button>
               </form>
               <section className="panel">
-                <h2 className="text-xl font-semibold">Members</h2>
+                <h2 className="text-xl font-semibold">{t("Members")}</h2>
                 <div className="mt-4 space-y-4">
                   {(
                     directory as
@@ -156,7 +167,7 @@ export default async function AdminPage({
                       >
                         {roles.map((r) => (
                           <option key={r} value={r}>
-                            {r.replaceAll("_", " ")}
+                            {roleLabel(r, locale)}
                           </option>
                         ))}
                       </select>
@@ -166,32 +177,32 @@ export default async function AdminPage({
                           name="active"
                           defaultChecked={m.is_active}
                         />
-                        Active access
+                        {t("Active access")}
                       </label>
-                      <button className="button">Update access</button>
+                      <button className="button">{t("Update access")}</button>
                     </form>
                   ))}
                 </div>
               </section>
               <section className="panel">
-                <h2 className="text-xl font-semibold">Invitations</h2>
+                <h2 className="text-xl font-semibold">{t("Invitations")}</h2>
                 <ul className="mt-4 space-y-3">
                   {invitations?.map((i) => (
                     <li key={i.id} className="text-sm">
                       <span className="font-medium">{i.email}</span> ·{" "}
                       {i.accepted_at
-                        ? "Accepted"
+                        ? t("Accepted")
                         : new Date(i.expires_at) < new Date()
-                          ? "Expired"
-                          : "Awaiting acceptance"}
+                          ? t("Expired")
+                          : t("Awaiting acceptance")}
                       <p className="text-xs text-slate-500">
-                        {i.role.replaceAll("_", " ")}
+                        {roleLabel(i.role, locale)}
                       </p>
                     </li>
                   ))}
                 </ul>
                 {!invitations?.length ? (
-                  <p className="muted mt-3">No invitations yet.</p>
+                  <p className="muted mt-3">{t("No invitations yet.")}</p>
                 ) : null}
               </section>
             </>
@@ -200,21 +211,23 @@ export default async function AdminPage({
         <div className="space-y-6">
           <AssessmentBuilder tenantId={tenant} />
           <section className="panel">
-            <h2 className="text-xl font-semibold">Published campaigns</h2>
+            <h2 className="text-xl font-semibold">
+              {t("Published campaigns")}
+            </h2>
             <ul className="mt-4 space-y-3">
               {campaigns?.map((c) => (
                 <li key={c.id} className="rounded-lg border p-3">
                   <p className="font-medium">{c.title}</p>
                   <p className="muted">
-                    {c.status} · Closes{" "}
-                    {new Date(c.closes_at).toLocaleDateString()}
+                    {workflowLabel(c.status, locale)} · {t("Closes")}{" "}
+                    {new Date(c.closes_at).toLocaleDateString(locale)}
                   </p>
                 </li>
               ))}
             </ul>
             {!campaigns?.length ? (
               <p className="muted mt-3">
-                Create your first reviewed check-in above.
+                {t("Create your first reviewed check-in above.")}
               </p>
             ) : null}
           </section>

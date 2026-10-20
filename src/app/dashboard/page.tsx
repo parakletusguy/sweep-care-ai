@@ -4,6 +4,8 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 import { workspaceContext, tenantName } from "@/lib/workspace";
 import { saveConsent, saveProfile } from "../workspace-actions";
 import { participantCopy } from "@/lib/locale";
+import { serverLocale } from "@/lib/server-locale";
+import { roleLabel } from "@/lib/ui-copy";
 
 const copy = {
   en: {
@@ -82,8 +84,7 @@ export default async function ParticipantDashboardPage() {
   ]);
   if (campaignError || resultError || consentError)
     throw new Error("Unable to load your wellbeing workspace.");
-  const locale: keyof typeof copy =
-    profile?.locale === "fr" ? "fr" : profile?.locale === "es" ? "es" : "en";
+  const { locale, t: common } = await serverLocale();
   const t = copy[locale];
   const ui = participantCopy[locale];
   const participantTenants = new Set(
@@ -97,8 +98,8 @@ export default async function ParticipantDashboardPage() {
         {membership.role !== "PARTICIPANT" ? (
           <div className="panel mb-6">
             <p>
-              You are signed in as{" "}
-              {membership.role.replaceAll("_", " ").toLowerCase()}.
+              {common("You are signed in as")}{" "}
+              {roleLabel(membership.role, locale)}.
             </p>
             <Link
               className="button mt-3"
@@ -111,7 +112,7 @@ export default async function ParticipantDashboardPage() {
                     : "/admin"
               }
             >
-              Open your staff workspace
+              {common("Open your staff workspace")}
             </Link>
           </div>
         ) : null}
@@ -159,7 +160,7 @@ export default async function ParticipantDashboardPage() {
                       <p className="mt-1 text-2xl font-semibold">
                         {result.score_snapshot.overallIndex}{" "}
                         <span className="text-sm font-normal">
-                          / 100 · calculated score
+                          / 100 · {ui.calculated}
                         </span>
                       </p>
                       <p className="mt-2 text-xs text-slate-500">

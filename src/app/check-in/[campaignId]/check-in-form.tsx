@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { participantCopy, type Locale } from "@/lib/locale";
+import { uiText } from "@/lib/ui-copy";
 
 type Question = {
   id: string;
@@ -23,6 +24,7 @@ export function CheckInForm({
   locale: Locale;
 }) {
   const t = participantCopy[locale];
+  const copy = uiText(locale);
   const router = useRouter();
   const [responses, setResponses] = useState(initialResponses);
   const [saveState, setSaveState] = useState(t.draftIntro);
@@ -30,25 +32,37 @@ export function CheckInForm({
   const [submitting, setSubmitting] = useState(false);
   const [changed, setChanged] = useState(false);
   const queue = useRef<Promise<void>>(Promise.resolve());
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestResponses = useRef(responses);
+  latestResponses.current = responses;
+  function saveDraft(snapshot: Record<string, number>) {
+    const saved = queue.current.then(async () => {
+      try {
+        const response = await fetch(`/api/check-in/${campaignId}/draft`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ responses: snapshot }),
+        });
+        if (!response.ok) throw new Error();
+        if (latestResponses.current === snapshot) setSaveState(t.savedDraft);
+        return true;
+      } catch {
+        if (latestResponses.current === snapshot) setSaveState(t.failedDraft);
+        return false;
+      }
+    });
+    queue.current = saved.then(() => {});
+    return saved;
+  }
   useEffect(() => {
     if (!changed) return;
     setSaveState(t.savingDraft);
-    const timer = setTimeout(() => {
-      queue.current = queue.current.then(async () => {
-        try {
-          const response = await fetch(`/api/check-in/${campaignId}/draft`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ responses }),
-          });
-          if (!response.ok) throw new Error();
-          setSaveState(t.savedDraft);
-        } catch {
-          setSaveState(t.failedDraft);
-        }
-      });
+    timer.current = setTimeout(() => {
+      void saveDraft(responses);
     }, 500);
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
   }, [responses, changed, campaignId, t]);
   const answered = questions.filter(
     (q) => responses[q.id] !== undefined,
@@ -84,6 +98,7 @@ export function CheckInForm({
           e.preventDefault();
           setSubmitting(true);
           setMessage("");
+          if (timer.current) clearTimeout(timer.current);
           await queue.current;
           try {
             const response = await fetch("/api/check-in", {
@@ -92,12 +107,14 @@ export function CheckInForm({
               body: JSON.stringify({ campaignId, responses }),
             });
             const payload = await response.json();
-            if (!response.ok) throw new Error(payload.error);
+            if (!response.ok) throw new Error();
             router.push("/dashboard");
             router.refresh();
           } catch (error) {
             setMessage(
-              error instanceof Error ? error.message : "Unable to submit.",
+              copy(
+                "Unable to submit. Please check your connection, consent and campaign availability.",
+              ),
             );
             setSubmitting(false);
           }
@@ -147,12 +164,20 @@ export function CheckInForm({
           </p>
         ) : null}
         <div className="flex justify-between gap-3">
-          <Link
+          <button
+            type="button"
+            disabled={submitting}
             className="min-h-11 rounded-lg border bg-white px-4 py-2"
-            href="/dashboard"
+            onClick={async () => {
+              if (timer.current) clearTimeout(timer.current);
+              setSubmitting(true);
+              const saved = !changed || (await saveDraft(responses));
+              if (saved) router.push("/dashboard");
+              else setSubmitting(false);
+            }}
           >
             {t.pause}
-          </Link>
+          </button>
           <button
             className="button"
             disabled={answered !== questions.length || submitting}

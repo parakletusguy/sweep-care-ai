@@ -1,3 +1,4 @@
+import { serverLocale } from "@/lib/server-locale";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { workspaceContext } from "@/lib/workspace";
@@ -9,6 +10,7 @@ export default async function CheckInPage({
 }: {
   params: Promise<{ campaignId: string }>;
 }) {
+  const { locale, t } = await serverLocale();
   const { campaignId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(campaignId)) notFound();
   const { supabase, user } = await workspaceContext();
@@ -23,9 +25,11 @@ export default async function CheckInPage({
   const { membership } = await workspaceContext(campaign.tenant_id);
   if (membership?.role !== "PARTICIPANT")
     return (
-      <WorkspaceShell title="Participant check-in">
+      <WorkspaceShell title={t("Participant check-in")}>
         <p className="panel">
-          This check-in requires a participant account in the organization.
+          {t(
+            "This check-in requires a participant account in the organization.",
+          )}
         </p>
       </WorkspaceShell>
     );
@@ -72,14 +76,15 @@ export default async function CheckInPage({
   if (submission) redirect("/dashboard");
   if (!profile?.adult_confirmed || !consent?.granted)
     return (
-      <WorkspaceShell title="Before your check-in">
+      <WorkspaceShell title={t("Before your check-in")}>
         <div className="panel">
           <p>
-            Complete your participant profile and make your consent choice
-            before starting.
+            {t(
+              "Complete your participant profile and make your consent choice before starting.",
+            )}
           </p>
           <a className="button mt-4" href="/dashboard">
-            Open profile and consent
+            {t("Open profile and consent")}
           </a>
         </div>
       </WorkspaceShell>
@@ -93,10 +98,11 @@ export default async function CheckInPage({
     !version?.published_at
   )
     return (
-      <WorkspaceShell title="Check-in unavailable">
+      <WorkspaceShell title={t("Check-in unavailable")}>
         <p className="panel">
-          This check-in is not currently open in the supported identified
-          campaign mode.
+          {t(
+            "This check-in is not currently open in the supported identified campaign mode.",
+          )}
         </p>
       </WorkspaceShell>
     );
@@ -106,7 +112,7 @@ export default async function CheckInPage({
         campaignId={campaign.id}
         questions={version.definition.questions}
         initialResponses={draft?.responses ?? {}}
-        locale={parseLocale(profile.locale)}
+        locale={locale}
       />
     </WorkspaceShell>
   );

@@ -1,6 +1,8 @@
+import { serverLocale } from "@/lib/server-locale";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { workspaceContext } from "@/lib/workspace";
 import { sessionCommand } from "./actions";
+import { workflowLabel } from "@/lib/ui-copy";
 type Member = {
   user_id: string;
   full_name: string | null;
@@ -26,6 +28,7 @@ function SessionFields({
   );
 }
 export default async function TrainerPage() {
+  const { locale, t } = await serverLocale();
   const { supabase, user, membership } = await workspaceContext();
   if (
     !membership ||
@@ -34,10 +37,11 @@ export default async function TrainerPage() {
     )
   )
     return (
-      <WorkspaceShell title="Programme sessions">
+      <WorkspaceShell title={t("Programme sessions")}>
         <p className="panel">
-          You need a facilitator, professional, or organization-administrator
-          role.
+          {t(
+            "You need a facilitator, professional, or organization-administrator role.",
+          )}
         </p>
       </WorkspaceShell>
     );
@@ -67,19 +71,20 @@ export default async function TrainerPage() {
     attended: boolean;
   }[];
   return (
-    <WorkspaceShell title="Programme sessions">
+    <WorkspaceShell title={t("Programme sessions")}>
       <p className="muted mb-5">
-        Facilitators see their assigned approved sessions and attendance
-        records. Personal assessment answers and care notes are not included.
+        {t(
+          "Facilitators see their assigned approved sessions and attendance records. Personal assessment answers and care notes are not included.",
+        )}
       </p>
       <div className="grid items-start gap-6 lg:grid-cols-2">
         {membership.role === "ORG_ADMIN" ? (
           <form action={sessionCommand} className="panel space-y-4">
-            <h2 className="text-xl font-semibold">Prepare a session</h2>
+            <h2 className="text-xl font-semibold">{t("Prepare a session")}</h2>
             <input type="hidden" name="tenantId" value={tenant} />
             <input type="hidden" name="command" value="CREATE" />
             <label className="block text-sm">
-              Title
+              {t("Title")}
               <input
                 className="field"
                 name="title"
@@ -89,9 +94,9 @@ export default async function TrainerPage() {
               />
             </label>
             <label className="block text-sm">
-              Facilitator
+              {t("Facilitator")}
               <select className="field" name="facilitatorId" required>
-                <option value="">Select an active facilitator</option>
+                <option value="">{t("Select an active facilitator")}</option>
                 {members
                   .filter(
                     (m) => m.role === "TRAINER_FACILITATOR" && m.is_active,
@@ -104,7 +109,7 @@ export default async function TrainerPage() {
               </select>
             </label>
             <label className="block text-sm">
-              Scheduled time
+              {t("Scheduled time")}
               <input
                 type="datetime-local"
                 className="field"
@@ -113,7 +118,7 @@ export default async function TrainerPage() {
               />
             </label>
             <label className="block text-sm">
-              Reviewed session materials
+              {t("Reviewed session materials")}
               <textarea
                 className="field"
                 name="materials"
@@ -122,18 +127,18 @@ export default async function TrainerPage() {
                 maxLength={12000}
               />
             </label>
-            <button className="button">Save session for review</button>
+            <button className="button">{t("Save session for review")}</button>
           </form>
         ) : null}
         <div className="space-y-5">
           {sessions?.map((s) => (
             <article className="panel" key={s.id}>
               <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
-                {s.status}
+                {workflowLabel(s.status, locale)}
               </p>
               <h2 className="mt-2 text-xl font-semibold">{s.title}</h2>
               <p className="muted mt-1">
-                {new Date(s.scheduled_at).toLocaleString()}
+                {new Date(s.scheduled_at).toLocaleString(locale)}
               </p>
               <p className="mt-4 whitespace-pre-wrap text-sm leading-7">
                 {s.materials}
@@ -144,14 +149,16 @@ export default async function TrainerPage() {
               ) ? (
                 <form action={sessionCommand} className="mt-4">
                   <SessionFields tenant={tenant} id={s.id} command="APPROVE" />
-                  <button className="button">Approve reviewed session</button>
+                  <button className="button">
+                    {t("Approve reviewed session")}
+                  </button>
                 </form>
               ) : null}
               {membership.role === "ORG_ADMIN" && s.status !== "COMPLETED" ? (
                 <form action={sessionCommand} className="mt-4 flex gap-2">
                   <SessionFields tenant={tenant} id={s.id} command="ENROLL" />
                   <label className="sr-only" htmlFor={`enroll-${s.id}`}>
-                    Participant to enroll
+                    {t("Participant to enroll")}
                   </label>
                   <select
                     id={`enroll-${s.id}`}
@@ -159,7 +166,7 @@ export default async function TrainerPage() {
                     required
                     className="field"
                   >
-                    <option value="">Enroll a participant</option>
+                    <option value="">{t("Enroll a participant")}</option>
                     {members
                       .filter((m) => m.role === "PARTICIPANT" && m.is_active)
                       .map((m) => (
@@ -168,10 +175,10 @@ export default async function TrainerPage() {
                         </option>
                       ))}
                   </select>
-                  <button className="button">Enroll</button>
+                  <button className="button">{t("Enroll")}</button>
                 </form>
               ) : null}
-              <h3 className="mt-5 font-semibold">Attendance</h3>
+              <h3 className="mt-5 font-semibold">{t("Attendance")}</h3>
               <ul className="mt-2 space-y-2">
                 {enrollments
                   ?.filter((e) => e.session_id === s.id)
@@ -181,8 +188,12 @@ export default async function TrainerPage() {
                       className="rounded-lg border p-3"
                     >
                       <p className="text-sm">
-                        {enrollment.full_name || `Participant ${index + 1}`} ·{" "}
-                        {enrollment.attended ? "Present" : "Not marked present"}
+                        {enrollment.full_name ||
+                          `${t("Participant")} ${index + 1}`}{" "}
+                        ·{" "}
+                        {enrollment.attended
+                          ? t("Present")
+                          : t("Not marked present")}
                       </p>
                       {s.facilitator_id === user.id &&
                       s.status === "APPROVED" ? (
@@ -204,8 +215,8 @@ export default async function TrainerPage() {
                           />
                           <button className="min-h-11 text-sm font-semibold text-teal-800 underline">
                             {enrollment.attended
-                              ? "Mark absent"
-                              : "Mark present"}
+                              ? t("Mark absent")
+                              : t("Mark present")}
                           </button>
                         </form>
                       ) : null}
@@ -215,14 +226,16 @@ export default async function TrainerPage() {
               {s.facilitator_id === user.id && s.status === "APPROVED" ? (
                 <form action={sessionCommand} className="mt-4">
                   <SessionFields tenant={tenant} id={s.id} command="COMPLETE" />
-                  <button className="button">Mark session completed</button>
+                  <button className="button">
+                    {t("Mark session completed")}
+                  </button>
                 </form>
               ) : null}
             </article>
           ))}
           {!sessions?.length ? (
             <p className="panel muted">
-              No sessions are available to your role yet.
+              {t("No sessions are available to your role yet.")}
             </p>
           ) : null}
         </div>

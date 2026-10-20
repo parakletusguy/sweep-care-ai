@@ -1,3 +1,4 @@
+import { serverLocale } from "@/lib/server-locale";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { WorkspaceShell } from "@/components/workspace-shell";
@@ -18,16 +19,14 @@ async function addResource(form: FormData) {
     values.tenantId,
   );
   requireRole(membership?.role, ["ORG_ADMIN", "WELLBEING_PROFESSIONAL"]);
-  const { error } = await supabase
-    .from("sweep_knowledge_resources")
-    .insert({
-      tenant_id: values.tenantId,
-      title: values.title,
-      url: values.url,
-      excerpt: values.excerpt,
-      tags: values.tags,
-      approved_by: user.id,
-    });
+  const { error } = await supabase.from("sweep_knowledge_resources").insert({
+    tenant_id: values.tenantId,
+    title: values.title,
+    url: values.url,
+    excerpt: values.excerpt,
+    tags: values.tags,
+    approved_by: user.id,
+  });
   if (error) throw new Error("Unable to save approved resource.");
   revalidatePath("/admin/resources");
 }
@@ -36,6 +35,7 @@ export default async function ResourcePage({
 }: {
   searchParams: Promise<{ tenant?: string }>;
 }) {
+  const { locale, t } = await serverLocale();
   const { tenant } = await searchParams;
   const { supabase, membership } = await workspaceContext(tenant);
   if (
@@ -43,8 +43,8 @@ export default async function ResourcePage({
     !["ORG_ADMIN", "WELLBEING_PROFESSIONAL"].includes(membership.role)
   )
     return (
-      <WorkspaceShell title="Approved resources">
-        <p className="panel">Resource-review access is required.</p>
+      <WorkspaceShell title={t("Approved resources")}>
+        <p className="panel">{t("Resource-review access is required.")}</p>
       </WorkspaceShell>
     );
   const { data, error } = await supabase
@@ -53,18 +53,20 @@ export default async function ResourcePage({
     .eq("tenant_id", membership.tenant_id);
   if (error) throw new Error("Unable to load approved resources.");
   return (
-    <WorkspaceShell title="Approved resources">
+    <WorkspaceShell title={t("Approved resources")}>
       <div className="grid gap-6 md:grid-cols-2">
         <form className="panel space-y-4" action={addResource}>
-          <h2 className="text-xl font-semibold">Review and add a source</h2>
+          <h2 className="text-xl font-semibold">
+            {t("Review and add a source")}
+          </h2>
           <p className="muted">
-            Only add content you have reviewed and have permission to share. The
-            assistant displays your exact excerpt with its source link. It does
-            not infer additional claims.
+            {t(
+              "Only add content you have reviewed and have permission to share. The assistant displays your exact excerpt with its source link. It does not infer additional claims.",
+            )}
           </p>
           <input type="hidden" name="tenantId" value={membership.tenant_id} />
           <label className="block text-sm">
-            Title
+            {t("Title")}
             <input
               className="field"
               name="title"
@@ -74,7 +76,7 @@ export default async function ResourcePage({
             />
           </label>
           <label className="block text-sm">
-            Original source URL
+            {t("Original source URL")}
             <input
               type="url"
               className="field"
@@ -84,7 +86,7 @@ export default async function ResourcePage({
             />
           </label>
           <label className="block text-sm">
-            Approved excerpt
+            {t("Approved excerpt")}
             <textarea
               className="field"
               name="excerpt"
@@ -95,19 +97,21 @@ export default async function ResourcePage({
             />
           </label>
           <label className="block text-sm">
-            Topic tags
+            {t("Topic tags")}
             <input
               className="field"
               name="tags"
               required
-              placeholder="For example: sleep, work, stress"
+              placeholder={t("For example: sleep, work, stress")}
             />
           </label>
           <label className="flex gap-3 text-sm leading-6">
-            <input type="checkbox" required className="mt-1" />I have reviewed
-            this source and approve this excerpt for participants.
+            <input type="checkbox" required className="mt-1" />
+            {t(
+              "I have reviewed this source and approve this excerpt for participants.",
+            )}
           </label>
-          <button className="button">Approve and add resource</button>
+          <button className="button">{t("Approve and add resource")}</button>
         </form>
         <div className="space-y-4">
           {data?.map((r) => (
@@ -125,7 +129,7 @@ export default async function ResourcePage({
           ))}
           {!data?.length ? (
             <p className="panel muted">
-              No organization resources are approved yet.
+              {t("No organization resources are approved yet.")}
             </p>
           ) : null}
         </div>

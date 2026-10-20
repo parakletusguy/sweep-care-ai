@@ -1,4 +1,5 @@
 "use client";
+import { useUiText } from "@/components/locale-context";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ function makeSlug(value: string) {
 }
 
 export default function OnboardingPage() {
+  const { locale, t } = useUiText();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [organisationName, setOrganisationName] = useState("");
@@ -51,7 +53,7 @@ export default function OnboardingPage() {
         .limit(1);
       if (memberError) {
         setMessage(
-          "Your organization access could not be loaded. Please try again.",
+          t("Your organization access could not be loaded. Please try again."),
         );
         return;
       }
@@ -61,7 +63,7 @@ export default function OnboardingPage() {
       }
       const { data, error } = await supabase.rpc("sweep_can_bootstrap");
       if (error) {
-        setMessage("Setup is temporarily unavailable. Please try again.");
+        setMessage(t("Setup is temporarily unavailable. Please try again."));
         return;
       }
       setCanBootstrap(Boolean(data));
@@ -85,7 +87,7 @@ export default function OnboardingPage() {
     if (error) {
       setStatus("error");
       setMessage(
-        "We could not complete the setup. Check the details and try again.",
+        t("We could not complete the setup. Check the details and try again."),
       );
       return;
     }
@@ -97,14 +99,16 @@ export default function OnboardingPage() {
     return (
       <main className="mx-auto max-w-xl px-5 py-16">
         <section className="panel">
-          <h1 className="text-2xl font-semibold">Your invitation is needed</h1>
+          <h1 className="text-2xl font-semibold">
+            {t("Your invitation is needed")}
+          </h1>
           <p className="muted mt-3">
-            You are signed in, but your email has no active organization access
-            yet. Ask your organization administrator to invite this exact email
-            address, then sign in again.
+            {t(
+              "You are signed in, but your email has no active organization access yet. Ask your organization administrator to invite this exact email address, then sign in again.",
+            )}
           </p>
           <a className="button mt-5" href="/login">
-            Return to sign in
+            {t("Return to sign in")}
           </a>
         </section>
       </main>
@@ -113,7 +117,7 @@ export default function OnboardingPage() {
     return (
       <main className="mx-auto max-w-xl px-5 py-16">
         <p className="panel" role="status">
-          {message || "Checking your organization access…"}
+          {message || t("Checking your organization access…")}
         </p>
       </main>
     );
@@ -125,17 +129,18 @@ export default function OnboardingPage() {
         aria-labelledby="setup-title"
       >
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-700">
-          Welcome to SWEEP Care
+          {t("Welcome to SWEEP Care")}
         </p>
         <h1
           id="setup-title"
           className="mt-3 text-3xl font-extrabold tracking-tight text-slate-950"
         >
-          Set up your organisation
+          {t("Set up your organisation")}
         </h1>
         <p className="mt-3 leading-6 text-slate-600">
-          This takes about a minute. You will be the first organisation
-          administrator and can invite others later.
+          {t(
+            "This takes about a minute. You will be the first organisation administrator and can invite others later.",
+          )}
         </p>
 
         <form className="mt-7 space-y-5" onSubmit={completeSetup}>
@@ -144,7 +149,7 @@ export default function OnboardingPage() {
               htmlFor="full-name"
               className="block text-sm font-bold text-slate-800"
             >
-              Your name
+              {t("Your name")}
             </label>
             <input
               id="full-name"
@@ -160,7 +165,7 @@ export default function OnboardingPage() {
               htmlFor="organisation-name"
               className="block text-sm font-bold text-slate-800"
             >
-              Organisation name
+              {t("Organisation name")}
             </label>
             <input
               id="organisation-name"
@@ -179,7 +184,7 @@ export default function OnboardingPage() {
               htmlFor="organisation-slug"
               className="block text-sm font-bold text-slate-800"
             >
-              Short address
+              {t("Short address")}
             </label>
             <input
               id="organisation-slug"
@@ -192,14 +197,15 @@ export default function OnboardingPage() {
               aria-describedby="slug-help"
             />
             <p id="slug-help" className="mt-2 text-sm text-slate-600">
-              Lower-case letters, numbers, and hyphens only. Example:
-              calm-harbour-school.
+              {t(
+                "Lower-case letters, numbers, and hyphens only. Example: calm-harbour-school.",
+              )}
             </p>
           </div>
 
           <fieldset>
             <legend className="block text-sm font-bold text-slate-800">
-              Your sector
+              {t("Your sector")}
             </legend>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {sectors.map((option) => (
@@ -215,7 +221,7 @@ export default function OnboardingPage() {
                     onChange={() => setSector(option.value)}
                     className="h-5 w-5 accent-teal-700"
                   />
-                  {option.label}
+                  {t(option.label)}
                 </label>
               ))}
             </div>
@@ -226,7 +232,9 @@ export default function OnboardingPage() {
             disabled={!canSubmit || status === "saving"}
             className="min-h-12 w-full rounded-lg bg-teal-700 px-4 text-sm font-bold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-teal-700/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
           >
-            {status === "saving" ? "Saving your organisation…" : "Finish setup"}
+            {status === "saving"
+              ? t("Saving your organisation…")
+              : t("Finish setup")}
           </button>
         </form>
 

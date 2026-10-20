@@ -1,8 +1,10 @@
 "use client";
+import { useUiText } from "@/components/locale-context";
 import { useState, useTransition } from "react";
 import { publishCheckIn } from "../workspace-actions";
 
 export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
+  const { locale, t } = useUiText();
   const [questions, setQuestions] = useState([
     { label: "", domain: "", min: 1, max: 5, reverse: false },
   ]);
@@ -17,26 +19,32 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
           try {
             await publishCheckIn(form);
             setMessage(
-              "Check-in published and available to adult participants with consent.",
+              t(
+                "Check-in published and available to adult participants with consent.",
+              ),
             );
           } catch {
             setMessage(
-              "Unable to publish. Check every question, domain, scale and closing date.",
+              t(
+                "Unable to publish. Check every question, domain, scale and closing date.",
+              ),
             );
           }
         })
       }
     >
-      <h2 className="text-xl font-semibold">Publish a custom check-in</h2>
+      <h2 className="text-xl font-semibold">
+        {t("Publish a custom check-in")}
+      </h2>
       <p className="muted">
-        Enter your own reviewed questions. This creates an immutable instrument
-        and an identified campaign for the organization’s participants. Custom
-        scores are non-diagnostic.
+        {t(
+          "Enter your own reviewed questions. This creates an immutable instrument and an identified campaign for the organization’s participants. Custom scores are non-diagnostic.",
+        )}
       </p>
       <input type="hidden" name="tenantId" value={tenantId} />
       <input type="hidden" name="questions" value={JSON.stringify(questions)} />
       <label className="block text-sm">
-        Title
+        {t("Title")}
         <input
           className="field"
           name="title"
@@ -46,20 +54,21 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
         />
       </label>
       <label className="block text-sm">
-        Participant introduction
+        {t("Participant introduction")}
         <textarea className="field" name="description" maxLength={2000} />
       </label>
       <label className="block text-sm">
-        Closes at (your local time)
+        {t("Closes at (your local time)")}
         <input className="field" name="closes" type="datetime-local" required />
       </label>
       {questions.map((q, index) => (
         <fieldset key={index} className="space-y-3 rounded-xl border p-4">
           <legend className="px-1 text-sm font-semibold">
-            Question {index + 1}
+            {t("Question")}
+            {index + 1}
           </legend>
           <label className="block text-sm">
-            Question text
+            {t("Question text")}
             <input
               className="field"
               required
@@ -76,7 +85,7 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
             />
           </label>
           <label className="block text-sm">
-            Domain name
+            {t("Domain name")}
             <input
               className="field"
               required
@@ -92,7 +101,7 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="text-sm">
-              Minimum
+              {t("Minimum")}
               <input
                 className="field"
                 type="number"
@@ -111,7 +120,7 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
               />
             </label>
             <label className="text-sm">
-              Maximum
+              {t("Maximum")}
               <input
                 className="field"
                 type="number"
@@ -142,7 +151,7 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
                 )
               }
             />
-            Reverse scoring: lower answers contribute higher scores
+            {t("Reverse scoring: lower answers contribute higher scores")}
           </label>
           {questions.length > 1 ? (
             <button
@@ -152,7 +161,7 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
                 setQuestions((v) => v.filter((_, i) => i !== index))
               }
             >
-              Remove question
+              {t("Remove question")}
             </button>
           ) : null}
         </fieldset>
@@ -169,10 +178,10 @@ export function AssessmentBuilder({ tenantId }: { tenantId: string }) {
             ])
           }
         >
-          Add question
+          {t("Add question")}
         </button>
         <button className="button" disabled={pending}>
-          {pending ? "Publishing…" : "Publish and open campaign"}
+          {pending ? t("Publishing…") : t("Publish and open campaign")}
         </button>
       </div>
       <p role="status" className="muted">

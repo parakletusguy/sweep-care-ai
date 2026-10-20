@@ -1,11 +1,13 @@
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { workspaceContext, tenantName } from "@/lib/workspace";
 import { ResourceAssistant } from "./resource-assistant";
+import { serverLocale } from "@/lib/server-locale";
 export default async function AssistantPage() {
+  const { t } = await serverLocale();
   const { memberships } = await workspaceContext();
   const permitted = memberships.filter((m) => m.role === "PARTICIPANT");
   return (
-    <WorkspaceShell title="Resource assistant">
+    <WorkspaceShell title={t("Resource assistant")}>
       {permitted.length ? (
         <ResourceAssistant
           organizations={permitted.map((m) => ({
@@ -15,7 +17,7 @@ export default async function AssistantPage() {
         />
       ) : (
         <p className="panel">
-          A participant role is required to open this workspace.
+          {t("A participant role is required to open this workspace.")}
         </p>
       )}
     </WorkspaceShell>

@@ -9,6 +9,8 @@ export async function POST(request: Request) {
     .object({
       tenantId: z.string().uuid(),
       message: z.string().trim().min(2).max(2000),
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      previousTopic: z.string().trim().max(2000).optional(),
     })
     .strict()
     .safeParse(await request.json().catch(() => null));
@@ -44,7 +46,10 @@ export async function POST(request: Request) {
       { error: "Approved resources are unavailable." },
       { status: 503 },
     );
-  const reply = navigateResources(body.data.message, resources ?? []);
+  const reply = navigateResources(body.data.message, resources ?? [], {
+    locale: body.data.locale,
+    previousTopic: body.data.previousTopic,
+  });
   const { error: auditError } = await supabase
     .from("sweep_assistant_events")
     .insert({
@@ -63,5 +68,5 @@ export async function POST(request: Request) {
       { error: "Unable to record this assistant response." },
       { status: 503 },
     );
-  return NextResponse.json(reply);
+  return NextResponse.json(reply, { headers: { "Cache-Control": "no-store" } });
 }

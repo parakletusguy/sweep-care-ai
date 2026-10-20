@@ -1,0 +1,3 @@
+-- Deliberately empty. There are no default customer records, clinical
+-- instruments, norms, resources or privileged accounts to invent or expose.
+-- Browser tests create their synthetic fixtures only on the isolated local stack.

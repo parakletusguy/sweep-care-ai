@@ -34,6 +34,8 @@ tsconfig.tsbuildinfo
 
 # Coverage
 coverage/
+test-results/
+playwright-report/
 .vercel
 .env*
 !.env.example
