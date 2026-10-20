@@ -38,7 +38,7 @@ async function signIn(page: Page, role: string) {
   await page.goto(
     `/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=email`,
   );
-  await expect(page).toHaveURL(/\/dashboard$/);
+  expect(new URL(page.url()).pathname).toBe('/dashboard');
 }
 
 test.beforeAll(async () => {
@@ -193,8 +193,9 @@ test("participant consent, autosave, immutable submission and withdrawal", async
     .getByRole("group", { name: "1. Test question one" })
     .getByRole("radio", { name: "4", exact: true })
     .check();
-  await expect(page.getByRole("status")).toContainText("Draft saved");
-  await page.reload();
+  await page.getByRole("button", { name: "Pause and return", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.goto(`/check-in/${campaign}`);
   await expect(
     page
       .getByRole("group", { name: "1. Test question one" })
@@ -204,6 +205,9 @@ test("participant consent, autosave, immutable submission and withdrawal", async
     .getByRole("group", { name: "2. Test question two" })
     .getByRole("radio", { name: "2", exact: true })
     .check();
+  await expect(page.getByRole("status")).toContainText("Draft saved");
+  await page.reload();
+  await expect(page.getByRole("group", { name: "2. Test question two" }).getByRole("radio", { name: "2", exact: true })).toBeChecked();
   await page
     .getByRole("button", { name: "Submit check-in", exact: true })
     .click();
@@ -239,7 +243,7 @@ test("administrator publishes a reviewed custom assessment through the interface
 test("mobile participant interface reflows and supports Spanish", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page, "PARTICIPANT");
-  await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("es");
+  await page.getByRole("combobox", { name: "Language", exact: true }).first().selectOption("es");
   await page.getByRole("button", { name: "Apply language" }).click();
   await expect(page.getByRole("heading", { name: "Tu espacio de bienestar" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "es");

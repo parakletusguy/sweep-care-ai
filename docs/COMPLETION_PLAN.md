@@ -46,7 +46,7 @@ Resend credentials and Supabase SMTP; paid-plan availability for leaked-password
 - Production deployment for commit `846747c7a3996615b2b5e5f26635896ab61f3fb5` is **Ready**. Vercel confirms `careai.sweepacademy.org` and the existing Vercel hostname both alias that deployment.
 - The live custom-domain landing page shows the compact “Listen. Understand. Care together.” design, and its sign-in form loads successfully.
 - Supabase magic-link and sign-up confirmation templates now use the deployed `/auth/confirm` token-hash endpoint. This avoids requiring an invitation recipient to possess the administrator's browser-specific PKCE verifier.
-- Exactly one approved sign-in email was requested from the production form. Resend reports **Delivered** for “Your sign-in link”. Delivery is verified; recipient link-opening and the resulting authenticated browser journey still require confirmation. No sign-in token is recorded here.
+- Exactly one approved sign-in email was requested from the production form. Resend reports **Delivered** for “Your sign-in link”. The owner subsequently confirmed in this chat that the link opens successfully. No sign-in token is recorded here.
 - Signed-out production-build checks returned redirects to `/login` for dashboard/admin/assistant/trainer pages and `401` for valid assistant/check-in API requests.
 - The CI workflow runs application tests, type checking and the production build. The live database isolation test remains a separately run transactional check; full automated multi-user browser end-to-end coverage is not implemented.
 
@@ -58,7 +58,21 @@ Resend credentials and Supabase SMTP; paid-plan availability for leaked-password
 
 **NOT IMPLEMENTED:** Live SAML/SCIM/LMS provider adapters (no provider selected), generative assistant synthesis, personal-goal tracking, complete staff translations and approved multilingual assessment content, guardian/minor onboarding, anonymous/targeted campaign submission, and full browser-based multi-user end-to-end automation.
 
-**UNVERIFIED ASSUMPTIONS:** None of the missing provider credentials, clinical content, model configuration or guardian policies is assumed available. Recipient sign-in-link opening is awaiting user confirmation. Organization-reviewed resources must be supplied before source-based answers can be useful.
+**UNVERIFIED ASSUMPTIONS:** None of the missing provider credentials, clinical content, model configuration or guardian policies is assumed available. The owner confirmed recipient sign-in-link opening. Organization-reviewed resources must be supplied before source-based answers can be useful.
+
+## Wrap-up implementation — 20 October 2026
+
+**IMPLEMENTED:** Guided conversational resource history and follow-ups, re-retrieval for each answer, tenant-switch cancellation, a new-conversation control and localized safety/refusal messages. Messages are not sent to an external model or stored as transcript text. Expanded English/French/Spanish interface copy across public, participant and staff screens, an explicit language selector and document language. Source excerpts and assessment questions retain their approved original wording. Pause now waits for draft persistence. Invalid email links display an actionable message. The obsolete sample reporting page is replaced by a signed-in unavailable state with no fake download success.
+
+**TESTED:** 135 application tests, type checking and the production build passed locally. Isolated browser/database workflow added; its run and release status are recorded below only after verification. The production dependency audit reports zero known vulnerabilities after targeted test-runner/ORM updates and a PostCSS override. Development-only Tailwind transitive advisories remain; a major CSS migration was not silently forced.
+
+**NOT IMPLEMENTED:** External generative AI, approved translated assessment instruments, guardian/minor or anonymous submission journeys, live enterprise adapters, and population reporting. The resource conversation is deliberately extractive, not a claim that generative synthesis is complete. No clinical, emergency-dispatch or legal-compliance certification is claimed.
+
+**UNVERIFIED ASSUMPTIONS:** The minor-consent policy and external-model sharing approval remain unresolved. Adults-only operation and no external model transmission are the safe defaults. No enterprise provider has been chosen. French/Spanish interface text still needs a qualified human language review before a formal multilingual rollout claim.
+
+**MIGRATIONS:** No new production schema change. The existing security-guard migration is made portable for fresh databases: revoke the legacy privileged function only if it exists, without creating a stub or changing the already-deployed restriction. The empty seed contains no invented content. Isolated CI verifies migration replay.
+
+**KNOWN LIMITATIONS:** Local browser integration requires Docker, unavailable on this Windows host; the same real stack is tested in an ephemeral GitHub runner instead. Nothing in the test code permits remote fixture creation or installs a production authentication bypass. Leaked-password protection still needs an approved paid-plan upgrade. The full PRD remains broader than this release.
 
 **MIGRATIONS:** The three additive migrations listed above were applied to the confirmed SWEEP Care project. The database verification creates temporary records inside a transaction and rolls them back; no destructive rollback was performed.
 

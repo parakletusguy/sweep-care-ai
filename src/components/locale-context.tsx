@@ -1,10 +1,14 @@
 "use client";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Locale } from "@/lib/locale";
 import { uiText } from "@/lib/ui-copy";
 import { changeLanguage } from "@/app/locale-actions";
 const LocaleContext = createContext<Locale>("en");
-export const LocaleProvider = LocaleContext.Provider;
+// Export a client component, not the Context.Provider object across the RSC
+// boundary. The latter compiles but fails when React loads the browser page.
+export function LocaleProvider({ value, children }: { value: Locale; children: ReactNode }) {
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
 export function useUiText() {
   const locale = useContext(LocaleContext);
   const t = useMemo(() => uiText(locale), [locale]);

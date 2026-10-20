@@ -4,11 +4,19 @@
 > *Connecting assessment, population intelligence, grounded programme design, human action, and measurable outcomes.*
 
 [![Deployment](https://img.shields.io/badge/Vercel-Live%20Production-black?logo=vercel)](https://sweep-care-ai.vercel.app)
-[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen.svg)](#testing)
+[![Tests](https://github.com/parakletusguy/sweep-care-ai/actions/workflows/verify.yml/badge.svg)](https://github.com/parakletusguy/sweep-care-ai/actions/workflows/verify.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
 [![PRD Version](https://img.shields.io/badge/PRD-v1.0%20(Oct%202026)-purple.svg)](./PRD.md)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](#)
+
+---
+
+## Release scope
+
+The live application is at [careai.sweepacademy.org](https://careai.sweepacademy.org). See [the completion report](docs/COMPLETION_PLAN.md) for verified delivery and outstanding dependencies. The architecture and product principles below describe the intended platform; they are not evidence that every PRD capability is connected in production. In-memory domain engines are not substitutes for persisted workflows.
+
+The current release is adults-only, uses identified custom numeric check-ins, and provides a guided source-based conversation rather than an external generative model. Enterprise providers are not connected. Population reports are unavailable; no sample figures or simulated exports are presented as real outcomes. Interface translations do not validate or translate assessment instruments.
 
 ---
 
@@ -146,7 +154,7 @@ Access controls and audit logging become progressively stricter from A to F:
 ## 7. Getting Started
 
 ### Prerequisites
-- **Node.js:** v20+ LTS (Tested on Node.js v24)
+- **Node.js:** v22.12+ (tested on Node.js v24)
 - **npm:** v10+
 
 ### Installation
@@ -162,13 +170,19 @@ npm install
 cp .env.example .env.local
 ```
 
-Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` before connecting the application to Supabase. The secure check-in route also requires `SUPABASE_SECRET_KEY` on the server only; it must never use a `NEXT_PUBLIC_` name or be committed.
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` before connecting the application to Supabase. Check-in writes use the authenticated caller and a restricted database function; they do not require a service-role key. Never expose a server secret through a `NEXT_PUBLIC_` name or commit it.
 
 ### Running Tests
 Execute the automated test suite verifying tenant isolation, RBAC privacy boundaries, scoring repeatability, and audit logging:
 ```bash
 npm test
 ```
+
+### Isolated browser and database tests
+
+With Docker running, use `npx supabase start`, `npx playwright install chromium`, then `npm run test:e2e`. The runner refuses remote targets, rehearses the transactional SQL security tests, builds against local Supabase, and exercises actual authenticated browser workflows. Test fixtures are synthetic and local only. The GitHub browser workflow creates a disposable stack and needs no production secrets.
+
+Browser traces and videos are disabled so one-time sign-in tokens are not retained in test artifacts. A deliberately empty seed file prevents fabricated clinical content or default privileged accounts.
 
 ### Development Server
 ```bash
