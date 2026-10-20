@@ -74,6 +74,14 @@ Resend credentials and Supabase SMTP; paid-plan availability for leaked-password
 
 **KNOWN LIMITATIONS:** Local browser integration requires Docker, unavailable on this Windows host; the same real stack is tested in an ephemeral GitHub runner instead. Nothing in the test code permits remote fixture creation or installs a production authentication bypass. Leaked-password protection still needs an approved paid-plan upgrade. The full PRD remains broader than this release.
 
+### Verified wrap-up release candidate
+
+- Revision `54c93cf3161360ccf230317f9858038535782eac`: [application checks](https://github.com/parakletusguy/sweep-care-ai/actions/runs/39375203258) and [isolated database/browser journeys](https://github.com/parakletusguy/sweep-care-ai/actions/runs/39375203245) both passed.
+- Nine browser journeys exercised real local Supabase authentication and RLS, consent/draft/submission/withdrawal, staff publishing, source-grounded conversation, mobile Spanish layout, two-tenant/HR rejection, D/F boundaries and trainer review/enrollment/attendance/completion. No API responses or production sessions were mocked.
+- Fresh migration replay and the transactional SQL security suite passed in the disposable CI stack. These are distinct from the 135 passing application tests.
+- The browser check caught a client-provider rendering error that type checking and build success alone did not catch. The provider was corrected before production publication; the discarded run is not counted as a passing result.
+- Vercel preview for this revision is Ready. French language switching was checked visually on the preview. Production publication requires the owner's explicit publishing approval; do not infer publication merely from a green preview.
+
 **MIGRATIONS:** The three additive migrations listed above were applied to the confirmed SWEEP Care project. The database verification creates temporary records inside a transaction and rolls them back; no destructive rollback was performed.
 
 **KNOWN LIMITATIONS:** Leaked-password protection remains unavailable on the current Free project; enabling it requires an approved paid-plan change. An email provider's Delivered event means the receiving mail server accepted the message, not that the recipient opened it or that it avoided the spam folder. Enterprise setup stays inactive until real provider configuration and live tests are available. This is a verified working release, not a declaration that the full PRD is 100% complete.
